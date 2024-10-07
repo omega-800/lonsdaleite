@@ -6,7 +6,7 @@ in
 {
   options.lonsdaleite.fs.permissions = (lib.lonsdaleite.mkParentDefEnableOption
     "sets hardened filesystem permissions" [ "fs" ]) // { };
-  config = mkIf (cfg.enable && sys.paranoid) {
+  config = mkIf (cfg.enable) {
     fileSystems = {
       #FIXME: separate partitions
       # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664
@@ -28,7 +28,7 @@ in
           "usrquota"
           "grpqouta"
           "rw"
-        ] ++ (if sys.paranoid then [ "noexec" ] else [ "exec" ]);
+        ] ++ (if config.lonsdaleite.paranoia == 3 then [ "noexec" ] else [ "exec" ]);
       };
       "/root" = {
         device = lib.mkDefault "/root";
@@ -48,7 +48,7 @@ in
           "size=200M"
           "nr_inodes=5k"
           "mode=1700"
-        ] ++ (if sys.paranoid then [ "noexec" ] else [ "exec" ]);
+        ] ++ (if config.lonsdaleite.paranoia == 3 then [ "noexec" ] else [ "exec" ]);
       };
       "/var" = {
         device = lib.mkDefault "/var";
@@ -61,17 +61,17 @@ in
           "noatime"
           "usrquota"
           "grpqouta"
-        ] ++ (if sys.paranoid then [ "noexec" ] else [ "exec" ]);
+        ] ++ (if config.lonsdaleite.paranoia == 3 then [ "noexec" ] else [ "exec" ]);
       };
       "/var/lib" = {
         device = lib.mkDefault "/var/lib";
         options = [ "defaults" "bind" "nodev" "nosuid" "nouser" ]
-          ++ (if sys.paranoid then [ "noexec" ] else [ "exec" ]);
+          ++ (if config.lonsdaleite.paranoia == 3 then [ "noexec" ] else [ "exec" ]);
       };
       "/boot" = {
         device = lib.mkDefault "/boot";
         options = [ "defaults" "nodev" "nosuid" "noexec" "umask=0077" ]
-          ++ (if sys.paranoid then [ "ro" ] else [ ]);
+          ++ (if config.lonsdaleite.paranoia == 3 then [ "ro" ] else [ ]);
       };
       "/srv" = {
         device = lib.mkDefault "/srv";
@@ -191,7 +191,7 @@ in
           "nosuid"
           "nouser"
           "noatime"
-          "hidepid=${if sys.paranoid then "4" else "2"}"
+          "hidepid=${if config.lonsdaleite.paranoia == 3 then "4" else "2"}"
           "gid=proc"
         ];
       };
