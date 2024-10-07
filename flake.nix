@@ -11,22 +11,18 @@
   # use stable channel by default
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
 
-  outputs = { self, ... }: {
+  outputs = { self, nixpkgs, ... }: {
     nixosModules = rec {
-      lonsdaleite.imports = [ ./src ];
+      lonsdaleite = { config, lib, ... }: {
+        imports = [ ./module ];
+        _module.args.lonLib = import ./lib { inherit lib config; };
+      };
       default = lonsdaleite; # convention
     };
 
-    overlays = rec {
-      lonsdaleite = final: prev: {
-        lib = prev.lib.extend (finalLib: prevLib: {
-          lonsdaleite = import ./lib {
-            lib = finalLib;
-            pkgs = final;
-          };
-        });
-      };
-      default = lonsdaleite;
+    nixosConfigurations.test = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [ self.nixosModules.lonsdaleite ./test ];
     };
   };
 }
