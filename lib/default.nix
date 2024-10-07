@@ -21,8 +21,12 @@ rec {
   mkParanoiaOptionDef = descriptions: default: {
     paranoia = mkOption {
       inherit default;
-      description =
-        concatImapStringsSep "\n" (i: d: "${toString i}: ${d}") descriptions;
+      description = concatImapStringsSep "\n"
+        (i: d:
+          "${toString i}: ${
+          if (builtins.match "^$" d) == null then "no effect" else d
+        }")
+        descriptions;
       type = paranoiaType;
     };
   };
