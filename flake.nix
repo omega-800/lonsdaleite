@@ -8,13 +8,18 @@
 
   description = "NixOS module to harden your system";
 
-  # use stable channel by default
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+  inputs = {
+    # use stable channel by default
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    # TODO: does flake-parts enable lazy evaluation of flake inputs?
+    # i don't like trashing projects full with deps
+    impermanence.url = "github:nix-community/impermanence";
+  };
 
-  outputs = { self, nixpkgs, ... }: {
+  outputs = { self, nixpkgs, impermanence, ... }: {
     nixosModules = rec {
       lonsdaleite = { config, lib, ... }: {
-        imports = [ ./module ];
+        imports = [ ./modules impermanence.nixosModules.impermanence ];
         _module.args.lonLib = import ./lib { inherit lib config; };
       };
       default = lonsdaleite; # convention

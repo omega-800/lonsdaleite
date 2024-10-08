@@ -1,11 +1,15 @@
 { lib, config, ... }:
 let
   rootConfig = config.lonsdaleite;
-  inherit (lib) mkOption attrByPath concatImapStringsSep;
-  inherit (lib.types) bool enum;
-in
-rec {
-  paranoiaType = enum [ 0 1 2 ];
+  inherit (lib)
+    mkOption attrByPath concatImapStringsSep concatStringsSep splitString
+    findFirst mapAttrsToList;
+  inherit (lib.types) bool enum ints;
+in rec {
+  paranoiaType = ints.between 0 2;
+
+  userByName = name:
+    findFirst (u: u.name == name) (mapAttrsToList (n: v: v) config.users.users);
 
   mkEnableDef = default: description:
     mkOption {
@@ -15,22 +19,41 @@ rec {
 
   mkEnableFrom = path: description: {
     enable = mkEnableDef (attrByPath (path ++ [ "enable" ]) false rootConfig)
-      description;
+      (description
+        + "Defaults to: config.lonsdaleite.${concatStringsSep "." path}enable");
   };
 
-  mkParanoiaOptionDef = descriptions: default: {
+  mkParanoiaOptionWithInfo = descriptions: default: info: {
     paranoia = mkOption {
       inherit default;
-      description = concatImapStringsSep "\n"
-        (i: d:
+      description = ''
+        ${concatImapStringsSep "\n" (i: d:
           "${toString i}: ${
-          if (builtins.match "^$" d) == null then "no effect" else d
-        }")
-        descriptions;
+            (if ((builtins.match "^$" d) == null) then d else "no effect")
+          }") descriptions}
+        ${info}
+      '';
       type = paranoiaType;
     };
   };
 
+  mkParanoiaOptionDef = descriptions: default:
+    mkParanoiaOptionWithInfo descriptions default "";
+
   mkParanoiaOption = descriptions:
     mkParanoiaOptionDef descriptions rootConfig.paranoia;
+
+  mkParanoiaFrom = path: descriptions:
+    mkParanoiaOptionWithInfo descriptions
+    (attrByPath (path ++ [ "paranoia" ]) 2 rootConfig)
+    "Defaults to: config.lonsdaleite.${concatStringsSep "." path}.paranoia";
+
+  mkLink = name: url: "[${name}](${url})";
+  mkSrcLink = url: mkLink "Source" url;
+  mkCopyLink = name: url: mkLink "Copied from `${name}`" url;
+  mkMineralLink = line:
+    mkCopyLink "nix-mineral"
+    "https://github.com/cynicsketch/nix-mineral/blob/6c6e7886925e81b39e9d85c74d8c0b1c91889b96/nix-mineral.nix#L${
+      toString line
+    }";
 }

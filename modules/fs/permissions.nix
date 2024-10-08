@@ -2,23 +2,24 @@
 let
   cfg = config.lonsdaleite.fs.permissions;
   inherit (lib) mkIf mkMerge mkDefault;
-  inherit (lonLib) mkEnableFrom mkParanoiaOption;
-in
-{
-  options.lonsdaleite.fs.permissions =
-    (mkEnableFrom [ "fs" ] "sets hardened filesystem permissions") // {
-      home = mkParanoiaOption [ "defaults" "nosuid" "noexec" ];
-      root = mkParanoiaOption [ "" "" "" ];
-      tmp = mkParanoiaOption [ "" "" "" ];
-      var = mkParanoiaOption [ "" "" "" ];
-      boot = mkParanoiaOption [ "" "" "" ];
-      srv = mkParanoiaOption [ "" "" "" ];
-      etc = mkParanoiaOption [ "" "" "" ];
-      "/" = mkParanoiaOption [ "" "" "" ];
-      usr = mkParanoiaOption [ "" "" "" ];
-      mnt = mkParanoiaOption [ "" "" "" ];
-      proc = mkParanoiaOption [ "" "" "" ];
-    };
+  inherit (lonLib) mkEnableFrom mkParanoiaOption mkParanoiaFrom;
+in {
+  options.lonsdaleite.fs.permissions = (mkEnableFrom [ "fs" ] ''
+    Sets hardened filesystem permissions. 
+    [Partitioning guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664)
+  '') // (mkParanoiaFrom [ "fs" ] [ ]) // {
+    home = mkParanoiaOption [ "defaults" "nosuid" "noexec" ];
+    root = mkParanoiaOption [ "" "" "" ];
+    tmp = mkParanoiaOption [ "" "" "" ];
+    var = mkParanoiaOption [ "" "" "" ];
+    boot = mkParanoiaOption [ "" "" "" ];
+    srv = mkParanoiaOption [ "" "" "" ];
+    etc = mkParanoiaOption [ "" "" "" ];
+    "/" = mkParanoiaOption [ "" "" "" ];
+    usr = mkParanoiaOption [ "" "" "" ];
+    mnt = mkParanoiaOption [ "" "" "" ];
+    proc = mkParanoiaOption [ "" "" "" ];
+  };
 
   config = mkIf (cfg.enable) {
     fileSystems = {
@@ -82,11 +83,11 @@ in
         device = mkDefault "/etc/nixos";
         options = [ "defaults" "nodev" "nouser" ]
           ++ (if cfg.etc.paranoia >= 1 then [
-          "bind"
-          "nosuid"
-          "noexec"
-        ] else
-          [ ]);
+            "bind"
+            "nosuid"
+            "noexec"
+          ] else
+            [ ]);
       };
       "/" = {
         device = mkDefault "/";
