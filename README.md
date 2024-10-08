@@ -9,7 +9,7 @@ lonsdaleite.url = "github:omega-800/lonsdaleite";
 Then, in your `configuration.nix`, add:
 
 ```nix
-config.longsdaleite = {
+config.lonsdaleite = {
     enable = true;
     # 0 is for noobies, 1 is moderate and 2 is hardcore
     paranoia = 1;
