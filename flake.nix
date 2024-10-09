@@ -2,6 +2,8 @@
   # awesome resources this project is based on, many kudos
   # https://github.com/cynicsketch/nix-mineral
   # https://github.com/Kicksecure/security-misc
+  # https://madaidans-insecurities.github.io/guides/linux-hardening.html
+  # https://theprivacyguide1.github.io/linux_hardening_guide
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html

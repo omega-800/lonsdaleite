@@ -6,7 +6,7 @@ let
   inherit (lonLib) mkEnableFrom mkParanoiaFrom;
 in
 {
-  options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "hardens ssh client")
+  options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
     allow-hosts = mkOption {
       type = listOf nonEmptyStr;

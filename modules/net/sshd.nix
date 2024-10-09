@@ -7,7 +7,7 @@ let
   usr = config.lonsdaleite.trustedUser;
 in
 {
-  options.lonsdaleite.net.sshd = (mkEnableFrom [ "net" ] "hardens ssh daemon")
+  options.lonsdaleite.net.sshd = (mkEnableFrom [ "net" ] "Hardens ssh daemon")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
     allow-hosts = mkOption {
       type = listOf nonEmptyStr;
