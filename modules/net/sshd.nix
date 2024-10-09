@@ -59,7 +59,7 @@ in
           LogLevel = "VERBOSE";
           GatewayPorts = "no";
           UseDns = false;
-          UsePam = mkDefault false;
+          UsePAM = mkDefault false;
           TCPKeepAlive = false;
           ClientAliveInterval = 300 - (cfg.paranoia * 100);
           ClientAliveCountMax = 3 - cfg.paranoia;
@@ -117,9 +117,9 @@ in
           {
             PasswordAuthentication = false;
             IgnoreRhosts = true;
-            AuthenticationMethods = "publickey";
+            AuthenticationMethods = mkDefault "publickey";
           }
-          (mkIf usr != null {
+          (mkIf (usr != null) {
             AllowUsers = [ usr ];
             AllowGroups = [ (lonLib.userByName usr).group ];
           })

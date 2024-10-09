@@ -5,11 +5,16 @@ let
     mkOption attrByPath concatImapStringsSep concatStringsSep splitString
     findFirst mapAttrsToList;
   inherit (lib.types) bool enum ints;
-in rec {
+in
+rec {
   paranoiaType = ints.between 0 2;
 
+  mkHighDefault = val: lib.mkOverride 900 val;
+  mkHigherDefault = val: lib.mkOverride 800 val;
+
   userByName = name:
-    findFirst (u: u.name == name) (mapAttrsToList (n: v: v) config.users.users);
+    findFirst (u: u.name == name) null
+      (mapAttrsToList (n: v: v) config.users.users);
 
   mkEnableDef = default: description:
     mkOption {
@@ -45,15 +50,15 @@ in rec {
 
   mkParanoiaFrom = path: descriptions:
     mkParanoiaOptionWithInfo descriptions
-    (attrByPath (path ++ [ "paranoia" ]) 2 rootConfig)
-    "Defaults to: config.lonsdaleite.${concatStringsSep "." path}.paranoia";
+      (attrByPath (path ++ [ "paranoia" ]) 2 rootConfig)
+      "Defaults to: config.lonsdaleite.${concatStringsSep "." path}.paranoia";
 
   mkLink = name: url: "[${name}](${url})";
   mkSrcLink = url: mkLink "Source" url;
   mkCopyLink = name: url: mkLink "Copied from `${name}`" url;
   mkMineralLink = line:
     mkCopyLink "nix-mineral"
-    "https://github.com/cynicsketch/nix-mineral/blob/6c6e7886925e81b39e9d85c74d8c0b1c91889b96/nix-mineral.nix#L${
+      "https://github.com/cynicsketch/nix-mineral/blob/6c6e7886925e81b39e9d85c74d8c0b1c91889b96/nix-mineral.nix#L${
       toString line
     }";
 }
