@@ -1,9 +1,9 @@
 { options, config, lib, lonLib, ... }:
 let
   cfg = config.lonsdaleite.net.fail2ban;
-  inherit (lib) mkIf mkMerge concatMapStrings mkOption mkDefault mkAfter;
-  inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  svc = cfg.integrations;
+  inherit (lib) mkIf mkMerge mkOption mkDefault mkAfter genAttrs;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEnableDef;
   f2bGitUrl =
     "https://raw.githubusercontent.com/fail2ban/fail2ban/9a558589d7e67bfd553641bd9c074f85f97c50f4";
   fetchF2bFilter = name: sha256:
@@ -22,9 +22,10 @@ in {
   #TODO: move service definitions to their respective configs?
   options.lonsdaleite.net.fail2ban = (mkEnableFrom [ "net" ] "Enables fail2ban")
     // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // {
-      ignore-ip = mkOption {
-        inherit (options.services.fail2ban.ignoreIP) description default type;
-      };
+      integrations = genAttrs [ "gitlab" "nginx" "grafana" "openssh" ] (s:
+        mkEnableDef config.services.${s}.enable
+        "Creates fail2ban rules for ${s}");
+      #TODO: add apache, common, dante, mysqld, mongodb, monitorix, squid, traefik, bitwarden
     };
 
   config = mkIf cfg.enable (mkMerge [
@@ -39,8 +40,8 @@ in {
             "ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)";
           maxtime = "${toString (48 + (12 * cfg.paranoia))}h";
           rndtime = "8m";
+          overalljails = cfg.paranoia == 2;
         };
-        ignoreIP = cfg.ignore-ip;
         maxretry = 5 - cfg.paranoia;
         jails = {
           port-scan.settings = {
@@ -52,39 +53,33 @@ in {
           };
         };
       };
-      environment.etc = {
-        # Define an action that will trigger a Ntfy push notification upon the issue of every new ban
-        "fail2ban/action.d/ntfy.local".text = mkDefault (mkAfter ''
-          [Definition]
-          norestored = true # Needed to avoid receiving a new notification after every restart
-          actionban = curl -H "Title: <ip> has been banned" -d "<name> jail has banned <ip> from accessing $(hostname) after <failures> attempts of hacking the system." https://ntfy.sh/Fail2banNotifications
-        '');
-        "fail2ban/filter.d/port-scan.conf".text = ''
-          [Definition]
-          failregex = rejected connection: .* SRC=<HOST>
-        '';
-      };
+      environment = mkMerge [
+        {
+          etc = {
+            # Define an action that will trigger a Ntfy push notification upon the issue of every new ban
+            "fail2ban/action.d/ntfy.local".text = mkDefault (mkAfter ''
+              [Definition]
+              norestored = true # Needed to avoid receiving a new notification after every restart
+              actionban = curl -H "Title: <ip> has been banned" -d "<name> jail has banned <ip> from accessing $(hostname) after <failures> attempts of hacking the system." https://ntfy.sh/Fail2banNotifications
+            '');
+            "fail2ban/filter.d/port-scan.conf".text = ''
+              [Definition]
+              failregex = rejected connection: .* SRC=<HOST>
+            '';
+          };
+        }
+        (mkIf config.lonsdaleite.fs.impermanence.enable {
+          persistence."/nix/persist" = {
+            directories = [ "/etc/fail2ban" ];
+            files = [ "/var/lib/fail2ban/fail2ban.sqlite3" ];
+          };
+        })
+      ];
       # Limit stack size to reduce memory usage
       systemd.services.fail2ban.serviceConfig.LimitSTACK = 256 * 1024;
     }
 
-    # TODO: research
-    (mkIf false {
-      services.fail2ban.jails.apache-nohome-iptables.settings = {
-        # Block an IP address if it accesses a non-existent
-        # home directory more than 5 times in 10 minutes,
-        # since that indicates that it's scanning.
-        filter = "apache-nohome";
-        action = ''iptables-multiport[name=HTTP, port="http,https"]'';
-        logpath = "/var/log/httpd/error_log*";
-        backend = "auto";
-        findtime = 600 + (cfg.paranoia * 300);
-        bantime = 600 + (cfg.paranoia * 300);
-        maxretry = 5 - cfg.paranoia;
-      };
-    })
-
-    (mkIf config.services.openssh.enable {
+    (mkIf svc.openssh {
       services.fail2ban.jails = {
         sshd.settings = {
           filter = "sshd";
@@ -101,7 +96,7 @@ in {
       };
     })
 
-    (mkIf config.services.grafana.enable {
+    (mkIf svc.grafana {
       services.fail2ban.jails.grafana-unauthorized.settings = {
         enabled = true;
         filter = "grafana-unauthorized";
@@ -126,29 +121,15 @@ in {
         '');
     })
 
-    (mkIf config.services.gitlab.enable {
+    (mkIf svc.gitlab {
       services.fail2ban.jails.gitlab-login-fail.settings = {
         enabled = true;
         filter = "gitlab-login-fail";
         logpath = "/var/log/gitlab/gitlab-rails/application.log";
-        # TODO: research
-        # action = ''
-        #   %(action_)s[blocktype=DROP]
-        #                    ntfy'';
-        # backend =
-        #   "auto"; # Do not forget to specify this if your jail uses a log file
-        # maxretry = 5 - cfg.paranoia;
-        # findtime = 600 + (cfg.paranoia * 300);
       };
-
-      environment.etc."fail2ban/filter.d/gitlab-login-fail.conf".text =
-        mkDefault (mkAfter ''
-          [Definition]
-          failregex = ^: Failed Login: username=<F-USER>.+</F-USER> ip=<HOST>$
-        '');
     })
 
-    (mkIf config.services.nginx.enable {
+    (mkIf svc.nginx {
       services.fail2ban.jails.ngnix-url-probe.settings = {
         enabled = true;
         filter = "nginx-url-probe";
@@ -161,55 +142,6 @@ in {
         maxretry = 5 - cfg.paranoia;
         findtime = 600 + (cfg.paranoia * 300);
       };
-      # Defines a filter that detects URL probing by reading the Nginx access log
-      environment.etc = {
-        "fail2ban/filter.d/nginx-botsearch.conf".text = mkDefault (mkAfter ''
-          [INCLUDES]
-
-          # Load regexes for filtering
-          before = botsearch-common.conf
-
-          [Definition]
-
-          failregex = ^<HOST> \- \S+ \[\] \"(GET|POST|HEAD) \/<block> \S+\" 404 .+$
-                      ^ \[error\] \d+#\d+: \*\d+ (\S+ )?\"\S+\" (failed|is not found) \(2\: No such file or directory\), client\: <HOST>\, server\: \S*\, request: \"(GET|POST|HEAD) \/<block> \S+\"\, .*?$
-
-          ignoreregex = 
-
-          datepattern = {^LN-BEG}%%ExY(?P<_sep>[-/.])%%m(?P=_sep)%%d[T ]%%H:%%M:%%S(?:[.,]%%f)?(?:\s*%%z)?
-                        ^[^\[]*\[({DATE})
-                        {^LN-BEG}
-
-          journalmatch = _SYSTEMD_UNIT=nginx.service + _COMM=nginx
-
-          # DEV Notes:
-          # Based on apache-botsearch filter
-          # 
-          # Author: Frantisek Sumsal
-        '');
-
-        "fail2ban/filter.d/nginx-bad-request.conf".text = mkDefault (mkAfter ''
-          [Definition]
-
-          # The request often doesn't contain a method, only some encoded garbage
-          # This will also match requests that are entirely empty
-          failregex = ^<HOST> - \S+ \[\] "[^"]*" 400
-
-          datepattern = {^LN-BEG}%%ExY(?P<_sep>[-/.])%%m(?P=_sep)%%d[T ]%%H:%%M:%%S(?:[.,]%%f)?(?:\s*%%z)?
-                        ^[^\[]*\[({DATE})
-                        {^LN-BEG}
-
-          journalmatch = _SYSTEMD_UNIT=nginx.service + _COMM=nginx
-
-          # Author: Jan Przybylak
-        '');
-
-        "fail2ban/filter.d/nginx-url-probe.local".text = mkDefault (mkAfter ''
-          [Definition]
-          failregex = ^<HOST>.*(GET /(wp-|admin|boaform|phpmyadmin|\.env|\.git)|\.(dll|so|cfm|asp)|(\?|&)(=PHPB8B5F2A0-3C92-11d3-A3A9-4C7B08C10000|=PHPE9568F36-D428-11d2-A769-00AA001ACF42|=PHPE9568F35-D428-11d2-A769-00AA001ACF42|=PHPE9568F34-D428-11d2-A769-00AA001ACF42)|\\x[0-9a-zA-Z]{2})
-        '');
-      };
     })
-
   ]);
 }

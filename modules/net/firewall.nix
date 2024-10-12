@@ -5,6 +5,7 @@ let
   inherit (lib.types) listOf nonEmptyStr;
   inherit (lonLib) mkEnableFrom mkParanoiaFrom;
 in {
+  # TODO: https://frrouting.org/
   options.lonsdaleite.net.firewall = (mkEnableFrom [ "net" ] "Enables firewall")
     // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
   config = mkIf cfg.enable {

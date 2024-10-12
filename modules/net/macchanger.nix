@@ -14,7 +14,7 @@ in {
       };
     };
 
-  config = mkIf cfg.enable {
+  config = mkIf (cfg.enable && (builtins.length cfg.interfaces > 0)) {
     systemd.services.macchanger = {
       enable = true;
       description = "Change MAC address";

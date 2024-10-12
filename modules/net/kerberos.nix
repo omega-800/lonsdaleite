@@ -9,5 +9,8 @@ in {
     (mkEnableFrom [ "net" ] "hardens ssh client")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // { };
 
-  config = mkIf cfg.enable { };
+  config = mkIf cfg.enable {
+    #TODO: research
+    security.krb5 = { };
+  };
 }

@@ -3,6 +3,7 @@ let
   cfg = config.lonsdaleite.fs.usbguard;
   inherit (lib) mkIf mkMerge mkDefault mkEnableOption;
   inherit (lonLib) mkEnableFrom mkParanoiaOption mkMineralLink mkParanoiaFrom;
+  usr = config.lonsdaleite.trustedUser;
 in {
   options.lonsdaleite.fs.usbguard =
     (mkEnableFrom [ "fs" ] options.services.usbguard.enable.description)
@@ -22,7 +23,7 @@ in {
     services.usbguard = {
       enable = true;
       IPCAllowedGroups = [ "wheel" ];
-      IPCAllowedUsers = [ "root" ];
+      IPCAllowedUsers = [ "root" ] ++ (if (usr != null) then [ usr ] else [ ]);
       dbus.enable = cfg.gnome-integration;
       presentDevicePolicy =
         if cfg.allow-at-boot then "allow" else "apply-policy";

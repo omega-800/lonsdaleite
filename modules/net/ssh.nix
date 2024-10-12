@@ -4,22 +4,21 @@ let
   inherit (lib) mkIf mkMerge concatMapStrings mkOption;
   inherit (lib.types) listOf nonEmptyStr;
   inherit (lonLib) mkEnableFrom mkParanoiaFrom;
-in
-{
+in {
   options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
-    allow-hosts = mkOption {
-      type = listOf nonEmptyStr;
-      description =
-        "Hosts to allow connecting to. Only required if paranoia == 2";
-      default = [ ];
+      allow-hosts = mkOption {
+        type = listOf nonEmptyStr;
+        description =
+          "Hosts to allow connecting to. Only required if paranoia == 2";
+        default = [ ];
+      };
+      revoked-keys = mkOption {
+        description = "Revoked keys";
+        type = listOf nonEmptyStr;
+        default = [ ];
+      };
     };
-    revoked-keys = mkOption {
-      description = "Revoked keys";
-      type = listOf nonEmptyStr;
-      default = [ ];
-    };
-  };
 
   # TODO: merge with sshd
   config = mkIf cfg.enable {
@@ -79,7 +78,7 @@ in
           SetEnv
           PasswordAuthentication no
           PermitLocalCommand no
-          RequiredRSASize 2048
+          RequiredRSASize 3072
         '';
       })
       (mkIf (cfg.paranoia == 2) {
@@ -89,6 +88,7 @@ in
           AddKeysToAgent no
           AddressFamily inet
           CheckHostIP yes
+          # will hash each host, so it’s not readable anymore 
           HashKnownHosts yes
           RekeyLimit 500M
           VisualHostKey yes

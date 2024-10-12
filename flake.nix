@@ -4,6 +4,7 @@
   # https://github.com/Kicksecure/security-misc
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html
   # https://theprivacyguide1.github.io/linux_hardening_guide
+  # https://www.debian.org/doc/manuals/securing-debian-manual/
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html
@@ -30,6 +31,25 @@
     nixosConfigurations.test = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [ self.nixosModules.lonsdaleite ./test ];
+    };
+
+    test-vm = self.nixosConfigurations.test.config.system.build.vm;
+
+    # to be run with nix run 
+    # TODO: remove this when done with project
+    apps.x86_64-linux = rec {
+      default = test-vm;
+      test-vm = {
+        type = "app";
+        program =
+          "${self.nixosConfigurations.test.config.system.build.vm}/bin/run-nixos-vm";
+        # "${(import nixpkgs { system = "x86_64-linux"; }).writeShellScript
+        # "test" "echo '${
+        #   builtins.concatStringsSep "xxx"
+        #   (builtins.match "(.*)exec .* -cpu max(.*)" (builtins.readFile
+        #     "${self.nixosConfigurations.test.config.system.build.vm}/bin/run-nixos-vm"))
+        # }'"}";
+      };
     };
   };
 }

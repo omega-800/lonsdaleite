@@ -1,2 +1,5 @@
 .null-ls*
 result
+nixos.*
+run.sh
+core

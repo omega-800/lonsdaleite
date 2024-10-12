@@ -44,9 +44,9 @@ in {
 
     services.resolved.dnssec = "true";
 
-    users = mkIf (usr != null && false) {
-      users.${usr}.extraGroups = [ "networkmanager" ];
-    };
+    users = mkIf (
+      # usr != null
+      false) { users.${usr}.extraGroups = [ "networkmanager" ]; };
 
     # The notion of "online" is a broken concept
     # https://github.com/systemd/systemd/blob/e1b45a756f71deac8c1aa9a008bd0dab47f64777/NEWS#L13
@@ -61,7 +61,11 @@ in {
         # Services that are only restarted might be not able to resolve when resolved is stopped before
         systemd-resolved.stopIfChanged = false;
       };
-      network.wait-online.enable = false;
+      network = {
+        wait-online.enable = false;
+        # Enable IPv6 privacy extensions for systemd-networkd.
+        config.networkConfig.IPv6PrivacyExtensions = "kernel";
+      };
     };
 
     environment = mkIf config.lonsdaleite.fs.impermanence.enable {
