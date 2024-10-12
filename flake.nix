@@ -6,6 +6,7 @@
   # https://theprivacyguide1.github.io/linux_hardening_guide
   # https://www.debian.org/doc/manuals/securing-debian-manual/
   # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/index
+  # https://owasp.org/
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html

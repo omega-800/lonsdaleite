@@ -29,6 +29,7 @@ in
       # text = mkDefault (mkBefore ''
       #   # Allow UID 1000 to log in
       #   auth       [default=ignore success=1]  ${pkgs.linux-pam}/lib/pam_succeed_if.so quiet user uid eq 1000
+      #   auth       required  ${pkgs.linux-pam}/lib/pam_listfile.so item=user sense=allow file=/etc/lonsdaleite/trusted-user
       #   # Disallow everyone else
       #   auth       requisite  ${pkgs.linux-pam}/lib/pam_nologin.so
       #   auth       requisite  ${pkgs.linux-pam}/lib/pam_securetty.so
@@ -73,6 +74,10 @@ in
         Unauthorized access is strictly prohibited and may result in legal action. Do not proceed!
       '')
 
+      # To prevent users from starting up the system interactively as root
+      (mkEtcPersist "sysconfig/init" ''
+        PROMPT=no
+      '')
       # TODO: 
       # Borrow Kicksecure gitconfig, disabling git symlinks and enabling fsck
       # by default for better git security.

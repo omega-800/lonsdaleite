@@ -53,8 +53,14 @@ in
       # krb5.enable = config.lonsdaleite.net.kerberos.enable;
       # TODO: research pam.p11
       makeHomeDir.umask = "0077";
-      #TODO: research nice, memlock, priority etc
+      #TODO: loosen these up a bit
       loginLimits = [
+        {
+          domain = "*";
+          item = "core";
+          type = "soft";
+          value = 0;
+        }
         {
           domain = "*";
           item = "core";
@@ -66,6 +72,30 @@ in
           item = "nofile";
           type = "hard";
           value = 512;
+        }
+        {
+          domain = "*";
+          item = "fsize";
+          type = "hard";
+          value = 2048;
+        }
+        {
+          domain = "*";
+          item = "rss";
+          type = "hard";
+          value = 1000;
+        }
+        {
+          domain = "*";
+          item = "memlock";
+          type = "hard";
+          value = 1000;
+        }
+        {
+          domain = "*";
+          item = "nproc";
+          type = "hard";
+          value = 100;
         }
         {
           domain = "ftp";
@@ -147,6 +177,26 @@ in
           su.requireWheel = true;
           su-l.requireWheel = true;
           system-login.failDelay.delay = "4000000";
+          # TODO: filter these
+          # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
+          common-session.text = ''
+            session    optional     pam_tmpdir.so
+          '';
+          other.text = ''
+            auth     required       pam_securetty.so
+            auth     required       pam_unix_auth.so
+            auth     required       pam_warn.so
+            auth     required       pam_deny.so
+            account  required       pam_unix_acct.so
+            account  required       pam_warn.so
+            account  required       pam_deny.so
+            password required       pam_unix_passwd.so
+            password required       pam_warn.so
+            password required       pam_deny.so
+            session  required       pam_unix_session.so
+            session  required       pam_warn.so
+            session  required       pam_deny.so
+          '';
         }
       ];
     };

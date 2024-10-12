@@ -73,7 +73,7 @@ rec {
     mkMerge [
       { etc."${file}".text = content; }
       (mkIf config.lonsdaleite.fs.impermanence.enable {
-        persistence."/nix/persist".files = [ "/ets/${file}" ];
+        persistence."/nix/persist".files = [ "/etc/${file}" ];
       })
     ];
   mkPersistFiles = files:

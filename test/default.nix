@@ -1,4 +1,4 @@
-{ modulesPath, lib, ... }: {
+{ modulesPath, lib, pkgs, ... }: {
   imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
   lonsdaleite = {
     enable = false;
@@ -39,6 +39,7 @@
     # woah didn't realize qemu can do serial "forwarding"
     # openssh.settings.PasswordAuthentication = lib.mkForce true;
   };
+  environment.systemPackages = with pkgs; [ lynis vulnix ];
 
   boot.loader.grub.devices = [ "/dev/sda" ];
   system.stateVersion = "24.05";
