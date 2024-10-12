@@ -3,9 +3,10 @@ let
   cfg = config.lonsdaleite.net.sshd;
   inherit (lib) mkIf mkMerge mkDefault mkForce mkOption concatMapStrings;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
   usr = config.lonsdaleite.trustedUser;
-in {
+in
+{
   # TODO: SetEnv and AcceptEnv fail to build if no args passed? but that's the point?
   options.lonsdaleite.net.sshd = (mkEnableFrom [ "net" ] ''
     Hardens ssh daemon. 
@@ -13,31 +14,23 @@ in {
         mkLink "linux-audit"
         "https://linux-audit.com/audit-and-harden-your-ssh-configuration/"
       }'') // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ])
-    // {
-      allow-hosts = mkOption {
-        type = listOf nonEmptyStr;
-        description =
-          "Hosts to allow connecting to. Only required if paranoia == 2";
-        default = [ ];
-      };
-      revoked-keys = mkOption {
-        description = "Revoked keys";
-        type = listOf nonEmptyStr;
-        default = [ ];
-      };
+  // {
+    allow-hosts = mkOption {
+      type = listOf nonEmptyStr;
+      description =
+        "Hosts to allow connecting to. Only required if paranoia == 2";
+      default = [ ];
     };
+    revoked-keys = mkOption {
+      description = "Revoked keys";
+      type = listOf nonEmptyStr;
+      default = [ ];
+    };
+  };
 
   config = mkIf cfg.enable {
-    environment = mkMerge [
-      {
-        etc."ssh/sshd_revoked_keys".text =
-          builtins.concatStringsSep "\n" cfg.revoked-keys;
-      }
-      (mkIf config.lonsdaleite.fs.impermanence.enable {
-        persistence."/nix/persist".directories =
-          [ "/etc/ssh/sshd_revoked_keys" ];
-      })
-    ];
+    environment = mkEtcPersist "ssh/sshd_revoked_keys"
+      (builtins.concatStringsSep "\n" cfg.revoked-keys);
     services.openssh = mkMerge [
       {
         enable = true;
@@ -52,9 +45,11 @@ in {
         # However those match blocks cannot be put after other `extraConfig` lines
         # with the current sshd config module, which is however something the sshd
         # config parser mandates.
-        authorizedKeysFiles = mkIf (!config.services.gitea.enable
-          && !config.services.gitlab.enable && !config.services.gitolite.enable
-          && !config.services.gerrit.enable && !config.services.forgejo.enable)
+        # TODO: make persistent
+        authorizedKeysFiles = mkIf
+          (!config.services.gitea.enable
+            && !config.services.gitlab.enable && !config.services.gitolite.enable
+            && !config.services.gerrit.enable && !config.services.forgejo.enable)
           (mkForce [ "/etc/ssh/authorized_keys.d/%u" ]);
 
         settings = {
@@ -91,34 +86,35 @@ in {
           # RhostsAuthentication = false;
           # RhostsRSAAuthentication = false;
         };
-        extraConfig = let t = toString (9 - (cfg.paranoia * 3));
-        in ''
-          ChannelTimeout global=${t}m
-          # equals
-          # ChannelTimeout x11-connection=${t}m tun-connection=${t}m session=${t}m agent-connection=${t}m direct-tcpip=${t}m direct-streamlocal@openssh.com=${t}m 
-          UnusedConnectionTimeout ${t}m
-          # Should be the default
-          Protocol 2
-          # SetEnv 
-          DisableForwarding yes
-          PermitTunnel no
-          ExposeAuthInfo no
-          FingerprintHash sha256
-          GSSAPIAuthentication no
-          KerberosAuthentication ${
-            if config.lonsdaleite.net.kerberos.enable then "yes" else "no"
-          }
-          # KerberosGetAFSToken no
-          KerberosOrLocalPasswd no
-          KerberosTicketCleanup yes
-          LoginGraceTime ${toString (120 - (cfg.paranoia * 30))}
-          MaxStartups ${toString (10 - (cfg.paranoia * 3))}:${
-            toString (30 + (cfg.paranoia * 20))
-          }:${toString (100 - (cfg.paranoia * 30))}
-          PrintLastLog yes
-          RevokedKeys /etc/ssh/sshd_revoked_keys
-          Compression yes
-        '';
+        extraConfig =
+          let t = toString (9 - (cfg.paranoia * 3));
+          in ''
+            ChannelTimeout global=${t}m
+            # equals
+            # ChannelTimeout x11-connection=${t}m tun-connection=${t}m session=${t}m agent-connection=${t}m direct-tcpip=${t}m direct-streamlocal@openssh.com=${t}m 
+            UnusedConnectionTimeout ${t}m
+            # Should be the default
+            Protocol 2
+            # SetEnv 
+            DisableForwarding yes
+            PermitTunnel no
+            ExposeAuthInfo no
+            FingerprintHash sha256
+            GSSAPIAuthentication no
+            KerberosAuthentication ${
+              if config.lonsdaleite.net.kerberos.enable then "yes" else "no"
+            }
+            # KerberosGetAFSToken no
+            KerberosOrLocalPasswd no
+            KerberosTicketCleanup yes
+            LoginGraceTime ${toString (120 - (cfg.paranoia * 30))}
+            MaxStartups ${toString (10 - (cfg.paranoia * 3))}:${
+              toString (30 + (cfg.paranoia * 20))
+            }:${toString (100 - (cfg.paranoia * 30))}
+            PrintLastLog yes
+            RevokedKeys /etc/ssh/sshd_revoked_keys
+            Compression yes
+          '';
       }
       (mkIf (cfg.paranoia >= 1) {
         extraConfig = ''

@@ -11,24 +11,26 @@ let
     sus-user-dirs;
   all-user-folders = mapAttrsToList (u: c: c.home) all-normal-users;
   all-system-folders = [ "/boot" "/etc" "/nix" "/opt" "/root" "/usr" ];
-in {
+in
+{
   #TODO: notify script depending on gui / tui
   options.lonsdaleite.os.antivirus =
     (mkEnableFrom [ "os" ] "Enables antivirus (clamav)") // { };
 
   config = mkIf cfg.enable {
-    security = mkMerge [
-      (mkIf config.lonsdaleite.os.privilege.enable
-        && config.lonsdaleite.os.privilege.use-sudo {
+    security = mkMerge (
+      let priv = config.lonsdaleite.os.privilege;
+      in [
+        (mkIf (priv.enable && priv.use-sudo) {
           sudo.extraConfig =
             "clamav ALL = (ALL) NOPASSWD: SETENV: ${pkgs.libnotify}/bin/notify-send";
         })
-      (mkIf config.lonsdaleite.os.privilege.enable
-        && (!config.lonsdaleite.os.privilege.use-sudo) {
+        (mkIf (priv.enable && (!priv.use-sudo)) {
           doas.extraConfig =
             "permit keepenv nopass clamav as root cmd ${pkgs.libnotify}/bin/notify-send";
         })
-    ];
+      ]
+    );
     services.clamav = {
       daemon = {
         enable = true;

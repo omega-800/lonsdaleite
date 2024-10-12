@@ -4,7 +4,16 @@
     enable = false;
     paranoia = 2;
     trustedUser = "alice";
-    net.enable = true;
+    os = {
+      enable = false;
+      pam.enable = true;
+      tty.enable = true;
+      systemd.enable = false;
+    };
+    fs = {
+      enable = false;
+      impermanence.enable = false;
+    };
   };
   users.users = {
     alice = {
@@ -27,7 +36,8 @@
     # };
     # grafana.enable = true;
     # so that i can one log in to a headless vm
-    openssh.settings.PasswordAuthentication = lib.mkForce true;
+    # woah didn't realize qemu can do serial "forwarding"
+    # openssh.settings.PasswordAuthentication = lib.mkForce true;
   };
 
   boot.loader.grub.devices = [ "/dev/sda" ];

@@ -1,9 +1,10 @@
 { config, lib, lonLib, pkgs, ... }:
 let
   cfg = config.lonsdaleite.os.pam;
-  inherit (lib) mkIf mkDefault mkBefore mkMerge mkForce mapAttrs;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink;
-in {
+  inherit (lib) mkIf mkDefault mkBefore mkMerge mkForce genAttrs;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+in
+{
   options.lonsdaleite.os.pam = (mkEnableFrom [ "os" ] ''
     Hardens pam
       Sources: 
@@ -21,6 +22,8 @@ in {
       }'') // mkParanoiaFrom [ "os" ] [ "" "" "" ];
 
   config = mkIf cfg.enable {
+    environment =
+      mkEtcPersist "lonsdaleite/trusted-user" config.lonsdaleite.trustedUser;
     #TODO: research and harden
     security.pam = {
       # TODO: implement encrypting /home, configure pam_mount
@@ -34,21 +37,23 @@ in {
       };
       enableFscrypt = cfg.paranoia == 0;
       # TODO: research, configure
-      enableOTPW = true;
+      # enableOTPW = true;
       # is enabled by default 
       # TODO: research
-      sshAgentAuth.enable = true;
+      # sshAgentAuth.enable = true;
       oath = {
-        enable = true;
+        # TODO: make configurable
+        # enable = true;
         digits = 8;
         usersFile = "/etc/users.oath";
         window = 5 - cfg.paranoia;
       };
       # TODO: zfs integration?
       # TODO: research, configure
-      krb5.enable = config.lonsdaleite.net.kerberos.enable;
+      # krb5.enable = config.lonsdaleite.net.kerberos.enable;
       # TODO: research pam.p11
       makeHomeDir.umask = "0077";
+      #TODO: research nice, memlock, priority etc
       loginLimits = [
         {
           domain = "*";
@@ -80,15 +85,16 @@ in {
           type = "-";
           value = 4 - cfg.paranoia;
         }
-        {
-          domain = "*";
-          item = "nonewprivs";
-          type = "-";
-          value = 1;
-        }
+        # TODO: add manually 
+        # {
+        #   domain = "*";
+        #   item = "nonewprivs";
+        #   type = "-";
+        #   value = 1;
+        # }
       ];
       services = mkMerge [
-        (mapAttrs (s: {
+        (genAttrs [ "passwd" "chpasswd" ] (s: {
           rules.password = {
             # https://github.com/NixOS/nixpkgs/issues/287420#issuecomment-2209405124
             unix = {
@@ -136,17 +142,8 @@ in {
               };
             };
           };
-        }) [ "passwd" "chpasswd" ])
+        }))
         {
-          # TODO: testing
-          # Enable PAM support for securetty, to prevent root login.
-          # https://unix.stackexchange.com/questions/670116/debian-bullseye-disable-console-tty-login-for-root
-          login.text = mkDefault (mkBefore ''
-            # Enable securetty support.
-            auth       requisite  pam_nologin.so
-            auth       requisite  pam_securetty.so
-          '');
-
           su.requireWheel = true;
           su-l.requireWheel = true;
           system-login.failDelay.delay = "4000000";

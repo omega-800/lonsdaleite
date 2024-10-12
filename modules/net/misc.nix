@@ -3,9 +3,10 @@ let
   cfg = config.lonsdaleite.net.misc;
   inherit (lib) mkIf mkMerge concatMapStrings mkOption mkDefault;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistFiles mkPersistDirs;
   usr = config.lonsdaleite.trustedUser;
-in {
+in
+{
   #TODO: implement
   options.lonsdaleite.net.misc =
     (mkEnableFrom [ "net" ] "Hardens random network related things")
@@ -44,9 +45,12 @@ in {
 
     services.resolved.dnssec = "true";
 
-    users = mkIf (
-      # usr != null
-      false) { users.${usr}.extraGroups = [ "networkmanager" ]; };
+    users = mkIf
+      (
+        # usr != null
+        false
+      )
+      { users.${usr}.extraGroups = [ "networkmanager" ]; };
 
     # The notion of "online" is a broken concept
     # https://github.com/systemd/systemd/blob/e1b45a756f71deac8c1aa9a008bd0dab47f64777/NEWS#L13
@@ -68,15 +72,13 @@ in {
       };
     };
 
-    environment = mkIf config.lonsdaleite.fs.impermanence.enable {
-      persistence."/nix/persist" = {
-        directories = [ "/etc/NetworkManager/system-connections" ];
-        files = [
-          "/var/lib/NetworkManager/seen-bssids"
-          "/var/lib/NetworkManager/timestamps"
-          "/var/lib/NetworkManager/secret_key"
-        ];
-      };
-    };
+    environment = mkMerge [
+      (mkPersistDirs [ "/etc/NetworkManager/system-connections" ])
+      (mkPersistFiles [
+        "/var/lib/NetworkManager/seen-bssids"
+        "/var/lib/NetworkManager/timestamps"
+        "/var/lib/NetworkManager/secret_key"
+      ])
+    ];
   };
 }

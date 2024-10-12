@@ -3,40 +3,36 @@ let
   cfg = config.lonsdaleite.net.ssh;
   inherit (lib) mkIf mkMerge concatMapStrings mkOption;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
-in {
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEtcPersist mkPersistDirs;
+in
+{
   options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
-      allow-hosts = mkOption {
-        type = listOf nonEmptyStr;
-        description =
-          "Hosts to allow connecting to. Only required if paranoia == 2";
-        default = [ ];
-      };
-      revoked-keys = mkOption {
-        description = "Revoked keys";
-        type = listOf nonEmptyStr;
-        default = [ ];
-      };
+    allow-hosts = mkOption {
+      type = listOf nonEmptyStr;
+      description =
+        "Hosts to allow connecting to. Only required if paranoia == 2";
+      default = [ ];
     };
+    revoked-keys = mkOption {
+      description = "Revoked keys";
+      type = listOf nonEmptyStr;
+      default = [ ];
+    };
+  };
 
   # TODO: merge with sshd
   config = mkIf cfg.enable {
     environment = mkMerge [
-      {
-        etc."ssh/sshd_revoked_host_keys".text =
-          builtins.concatStringsSep "\n" cfg.revoked-keys;
-      }
-      (mkIf config.lonsdaleite.fs.impermanence.enable {
-        persistence."/nix/persist".directories = [
-          "/etc/ssh/sshd_revoked_host_keys"
-          "/etc/ssh/authorized_keys.d"
-          "/etc/ssh/ssh_host_rsa_key"
-          "/etc/ssh/ssh_host_rsa_key.pub"
-          "/etc/ssh/ssh_host_ed25519_key"
-          "/etc/ssh/ssh_host_ed25519_key.pub"
-        ];
-      })
+      (mkEtcPersist "ssh/sshd_revoked_host_keys"
+        (builtins.concatStringsSep "\n" cfg.revoked-keys))
+      (mkPersistDirs [
+        "/etc/ssh/authorized_keys.d"
+        "/etc/ssh/ssh_host_rsa_key"
+        "/etc/ssh/ssh_host_rsa_key.pub"
+        "/etc/ssh/ssh_host_ed25519_key"
+        "/etc/ssh/ssh_host_ed25519_key.pub"
+      ])
     ];
     programs.ssh = mkMerge [
       {

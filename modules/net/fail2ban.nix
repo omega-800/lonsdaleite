@@ -3,7 +3,8 @@ let
   cfg = config.lonsdaleite.net.fail2ban;
   svc = cfg.integrations;
   inherit (lib) mkIf mkMerge mkOption mkDefault mkAfter genAttrs;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEnableDef;
+  inherit (lonLib)
+    mkEnableFrom mkParanoiaFrom mkEnableDef mkPersistDirs mkPersistFiles;
   f2bGitUrl =
     "https://raw.githubusercontent.com/fail2ban/fail2ban/9a558589d7e67bfd553641bd9c074f85f97c50f4";
   fetchF2bFilter = name: sha256:
@@ -16,17 +17,18 @@ let
       url = "${f2bGitUrl}/config/action.d/${name}.conf";
       inherit sha256;
     };
-in {
+in
+{
   #TODO: harden / research
   #TODO: fetch filters from fail2ban repo?
   #TODO: move service definitions to their respective configs?
   options.lonsdaleite.net.fail2ban = (mkEnableFrom [ "net" ] "Enables fail2ban")
     // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // {
-      integrations = genAttrs [ "gitlab" "nginx" "grafana" "openssh" ] (s:
-        mkEnableDef config.services.${s}.enable
+    integrations = genAttrs [ "gitlab" "nginx" "grafana" "openssh" ] (s:
+      mkEnableDef config.services.${s}.enable
         "Creates fail2ban rules for ${s}");
-      #TODO: add apache, common, dante, mysqld, mongodb, monitorix, squid, traefik, bitwarden
-    };
+    #TODO: add apache, common, dante, mysqld, mongodb, monitorix, squid, traefik, bitwarden
+  };
 
   config = mkIf cfg.enable (mkMerge [
     {
@@ -68,12 +70,8 @@ in {
             '';
           };
         }
-        (mkIf config.lonsdaleite.fs.impermanence.enable {
-          persistence."/nix/persist" = {
-            directories = [ "/etc/fail2ban" ];
-            files = [ "/var/lib/fail2ban/fail2ban.sqlite3" ];
-          };
-        })
+        (mkPersistDirs [ "/etc/fail2ban" ])
+        (mkPersistFiles [ "/var/lib/fail2ban/fail2ban.sqlite3" ])
       ];
       # Limit stack size to reduce memory usage
       systemd.services.fail2ban.serviceConfig.LimitSTACK = 256 * 1024;
