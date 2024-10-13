@@ -9,15 +9,39 @@ in
   options.lonsdaleite.os.tty = (mkEnableFrom [ "os" ] "Hardens tty") // { };
 
   config = mkIf cfg.enable {
-    # TODO: disable root login by /sbin/nologin?
     # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sec-Disallowing_Root_Access
-    #TODO: sulogin
-    users.users = mkMerge [{
-      root.shell = "${lib.getExe' pkgs.util-linux "nologin"}";
-    }
+    boot.initrd.systemd.users.root.shell = "${pkgs.shadow}/bin/nologin";
+    users.users = mkMerge [
+      {
+        root.shell = "${pkgs.shadow}/bin/nologin";
+      }
       # infinite recursion 
       # (mkIf (usr != null) { "${usr}".uid = 1000; })
+      { "${usr}".uid = 1000; }
     ];
+    # man 5 login.defs
+    security.loginDefs.settings = {
+      # login isn't allowed if one can't cd to home dir
+      DEFAULT_HOME = "no";
+      # TODO: research
+      # ENCRYPT_METHOD = "";
+      UMASK = "077"; # already default
+
+      # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html#idm1318
+      FAILLOG_ENAB = "yes";
+      LOG_UNKFAIL_ENAB = "no";
+      # These ones enable logging of su/sg attempts to syslog. Quite important on serious machines but note that this can create privacy issues as well.
+      # SYSLOG_SU_ENAB = "yes";
+      # SYSLOG_SG_ENAB = "yes";
+
+      # https://www.redhat.com/sysadmin/password-expiration-date-linux
+      PASS_MAX_DAYS = 90 - (cfg.paranoia * 20);
+      PASS_MIN_DAYS = 7;
+      PASS_WARN_AGE = 5;
+      # TODO: nice to have
+      # USERDEL_CMD
+    };
+    #TODO: sulogin
     security.pam.services.login = mkIf config.lonsdaleite.os.pam.enable {
       # TODO: testing
       # Enable PAM support for securetty, to prevent root login.
@@ -42,10 +66,8 @@ in
           ''
             trap "" 1 2 3 15
             TMOUT="$(( 60*10 ))";
-            if [ -z "$DISPLAY" ]; then 
-              export TMOUT;
-              readonly TMOUT
-            fi
+
+            [ -z "$DISPLAY" ] && export TMOUT && readonly TMOUT
 
             case $( /usr/bin/env tty ) in
             	/dev/tty[0-9]*) export TMOUT && readonly TMOUT;;
@@ -78,6 +100,7 @@ in
       (mkEtcPersist "sysconfig/init" ''
         PROMPT=no
       '')
+
       # TODO: 
       # Borrow Kicksecure gitconfig, disabling git symlinks and enabling fsck
       # by default for better git security.

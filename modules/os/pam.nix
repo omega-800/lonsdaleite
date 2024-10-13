@@ -22,8 +22,14 @@ in
       }'') // mkParanoiaFrom [ "os" ] [ "" "" "" ];
 
   config = mkIf cfg.enable {
-    environment =
-      mkEtcPersist "lonsdaleite/trusted-user" config.lonsdaleite.trustedUser;
+    # TODO: implement
+    environment = mkMerge [
+      (mkEtcPersist "lonsdaleite/trusted-user" config.lonsdaleite.trustedUser)
+      # disallow remote access to admins
+      # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
+      # TODO: include pam_access in all of the modules
+      (mkEtcPersist "security/access.conf" "-:wheel:ALL EXCEPT LOCAL")
+    ];
     #TODO: research and harden
     security.pam = {
       # TODO: implement encrypting /home, configure pam_mount
@@ -38,7 +44,6 @@ in
       enableFscrypt = cfg.paranoia == 0;
       # TODO: research, configure
       # enableOTPW = true;
-      # is enabled by default 
       # TODO: research
       # sshAgentAuth.enable = true;
       oath = {
@@ -177,25 +182,37 @@ in
           su.requireWheel = true;
           su-l.requireWheel = true;
           system-login.failDelay.delay = "4000000";
+          # TODO: include pam_access in all services
+          # TODO: include common-* inside of the other rules
+          common-auth.text = ''
+            auth    [success=1 default=ignore]      ${pkgs.linux-pam}/lib/pam_unix.so nullok
+            auth    requisite                       ${pkgs.linux-pam}/lib/pam_deny.so
+            auth    required                        ${pkgs.linux-pam}/lib/pam_permit.so
+            auth    optional                        ${pkgs.linux-pam}/lib/pam_cap.so
+          '';
+          common-account.text = "\n";
+          common-password.text = "\n";
           # TODO: filter these
           # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
           common-session.text = ''
-            session    optional     pam_tmpdir.so
+            session    optional     ${pkgs.linux-pam}/lib/pam_tmpdir.so
+            # Already defined in /etc/login.defs but just to be sure
+            session    optional     ${pkgs.linux-pam}/lib/pam_umask.so umask=077
           '';
           other.text = ''
-            auth     required       pam_securetty.so
-            auth     required       pam_unix_auth.so
-            auth     required       pam_warn.so
-            auth     required       pam_deny.so
-            account  required       pam_unix_acct.so
-            account  required       pam_warn.so
-            account  required       pam_deny.so
-            password required       pam_unix_passwd.so
-            password required       pam_warn.so
-            password required       pam_deny.so
-            session  required       pam_unix_session.so
-            session  required       pam_warn.so
-            session  required       pam_deny.so
+            auth     required       ${pkgs.linux-pam}/lib/pam_securetty.so
+            auth     required       ${pkgs.linux-pam}/lib/pam_unix_auth.so
+            auth     required       ${pkgs.linux-pam}/lib/pam_warn.so
+            auth     required       ${pkgs.linux-pam}/lib/pam_deny.so
+            account  required       ${pkgs.linux-pam}/lib/pam_unix_acct.so
+            account  required       ${pkgs.linux-pam}/lib/pam_warn.so
+            account  required       ${pkgs.linux-pam}/lib/pam_deny.so
+            password required       ${pkgs.linux-pam}/lib/pam_unix_passwd.so
+            password required       ${pkgs.linux-pam}/lib/pam_warn.so
+            password required       ${pkgs.linux-pam}/lib/pam_deny.so
+            session  required       ${pkgs.linux-pam}/lib/pam_unix_session.so
+            session  required       ${pkgs.linux-pam}/lib/pam_warn.so
+            session  required       ${pkgs.linux-pam}/lib/pam_deny.so
           '';
         }
       ];
