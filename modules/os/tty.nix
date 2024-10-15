@@ -6,7 +6,8 @@ let
   usr = config.lonsdaleite.trustedUser;
 in
 {
-  options.lonsdaleite.os.tty = (mkEnableFrom [ "os" ] "Hardens tty") // { };
+  options.lonsdaleite.os.tty = (mkEnableFrom [ "os" ] "Hardens tty")
+    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]);
 
   config = mkIf cfg.enable {
     # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sec-Disallowing_Root_Access
@@ -16,8 +17,8 @@ in
         root.shell = "${pkgs.shadow}/bin/nologin";
       }
       # infinite recursion 
-      # (mkIf (usr != null) { "${usr}".uid = 1000; })
-      { "${usr}".uid = 1000; }
+      (mkIf (usr != null) { "${usr}".uid = 1000; })
+      # { "${usr}".uid = 1000; }
     ];
     # man 5 login.defs
     security.loginDefs.settings = {
@@ -62,6 +63,7 @@ in
     environment = mkMerge [
       {
         # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sect-Security_Guide-Administrative_Controls-Enabling_Automatic_Logouts
+        # https://wiki.archlinux.org/title/Security#Automatic_logout
         extraInit = # sh
           ''
             trap "" 1 2 3 15

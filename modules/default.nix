@@ -1,7 +1,8 @@
 { lib, lonLib, config, ... }:
 let
   inherit (lib) mkEnableOption mkOption mapAttrsToList filterAttrs;
-  inherit (lib.types) enum nullOr;
+  inherit (lib.types) enum nullOr nonEmptyStr;
+  inherit (lonLib) mkParanoiaOptionDef mkEnableDef;
 in
 {
   imports = [ ./fs ./hw ./net ./os ./sw ];
@@ -14,16 +15,24 @@ in
     {
       enable = mkEnableOption "Enables lonsdaleite";
       trustedUser = mkOption {
-        type = nullOr (enum allUsers);
+        type = nullOr nonEmptyStr;
         description =
           "The one and only trusted user. Or none, if you can't trust yourself either";
         default = null;
       };
-      decapitated = mkEnableOption ''
+      decapitated = mkEnableDef true ''
         If the host will be running in "headless" mode, eg. a server. If you are expecting your gui to work, don't enable this option. If you are a tui-only gigachad then enjoy the extra security by enabling it.'';
-    } // (lonLib.mkParanoiaOptionDef [
+    } // (mkParanoiaOptionDef [
       "You still want your machine to be usable"
       "You like pretending to be schizo"
       "The feds are after you"
     ] 2);
+
+  # because i'm too stupid to deal with infinite recursion
+  config.assertions = [{
+    assertion = config.lonsdaleite.trustedUser == null
+      || config.users.users."${config.lonsdaleite.trustedUser}".isNormalUser;
+    message =
+      "config.lonsdaleite.trustedUser must be either null or normalUser";
+  }];
 }

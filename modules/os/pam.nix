@@ -3,6 +3,7 @@ let
   cfg = config.lonsdaleite.os.pam;
   inherit (lib) mkIf mkDefault mkBefore mkMerge mkForce genAttrs;
   inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+  usr = config.lonsdaleite.trustedUser;
 in
 {
   options.lonsdaleite.os.pam = (mkEnableFrom [ "os" ] ''
@@ -24,7 +25,7 @@ in
   config = mkIf cfg.enable {
     # TODO: implement
     environment = mkMerge [
-      (mkEtcPersist "lonsdaleite/trusted-user" config.lonsdaleite.trustedUser)
+      (mkIf (usr != null) (mkEtcPersist "lonsdaleite/trusted-user" usr))
       # disallow remote access to admins
       # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
       # TODO: include pam_access in all of the modules
@@ -147,6 +148,7 @@ in
             # Require secure passwords
             pwquality = {
               control = "required";
+              #pam_cracklib?
               modulePath =
                 "${pkgs.libpwquality.lib}/lib/security/pam_pwquality.so";
               # order BEFORE pam_unix.so
@@ -192,6 +194,7 @@ in
           '';
           common-account.text = "\n";
           common-password.text = "\n";
+          # TODO: pam_tally2
           # TODO: filter these
           # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
           common-session.text = ''
