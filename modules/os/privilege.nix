@@ -28,15 +28,25 @@ in
 
       environment.systemPackages =
         if (!cfg.use-sudo) then [
-          (pkgs.writeScriptBin "sudo" ''exec ${lib.getExe pkgs.doas} "$@"'')
-          (pkgs.writeScriptBin "sudoedit" ''
-            exec ${lib.getExe pkgs.doas} ${lib.getExe' pkgs.nano "rnano"} "$@"'')
-          (pkgs.writeScriptBin "doasedit" ''
-            exec ${lib.getExe pkgs.doas} ${lib.getExe' pkgs.nano "rnano"} "$@"'')
+          # TODO: lib.getExe doas yields error: "doas: not installed setuid"
+          (pkgs.writeScriptBin "sudo" ''exec doas "$@"'')
+          (pkgs.writeScriptBin "sudoedit"
+            ''exec doas ${lib.getExe' pkgs.nano "rnano"} "$@"'')
+          (pkgs.writeScriptBin "doasedit"
+            ''exec doas ${lib.getExe' pkgs.nano "rnano"} "$@"'')
         ] else
           [ ];
     })
     # defaults should be more minimalistic in NixOS imho
     (mkIf cfg.disable { security.sudo.enable = false; })
+    {
+      assertions = [{
+        assertion = !(cfg.enable && cfg.disable);
+        message = ''
+          One can only enable or disable privileged access, not both.
+          Set one of config.lonsdaleite.os.privilege.{enable,disable} to false.
+        '';
+      }];
+    }
   ];
 }

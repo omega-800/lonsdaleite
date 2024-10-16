@@ -14,6 +14,7 @@ let
 in
 {
   #TODO: notify script depending on gui / tui
+  #TODO: research
   options.lonsdaleite.os.antivirus =
     (mkEnableFrom [ "os" ] "Enables antivirus (clamav)") // { };
 
@@ -84,6 +85,7 @@ in
       services.av-user-scan = {
         description = "scan normal user directories for suspect files";
         after = [ "network-online.target" ];
+        wantedBy = [ "network-online.target" ];
         serviceConfig = {
           Type = "oneshot";
           ExecStart =
@@ -105,6 +107,7 @@ in
       services.av-all-scan = {
         description = "scan all directories for suspect files";
         after = [ "network-online.target" ];
+        wantedBy = [ "network-online.target" ];
         serviceConfig = {
           Type = "oneshot";
           ExecStart = ''

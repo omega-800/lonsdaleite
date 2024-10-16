@@ -13,12 +13,8 @@ in
     # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sec-Disallowing_Root_Access
     boot.initrd.systemd.users.root.shell = "${pkgs.shadow}/bin/nologin";
     users.users = mkMerge [
-      {
-        root.shell = "${pkgs.shadow}/bin/nologin";
-      }
-      # infinite recursion 
+      { root.shell = "${pkgs.shadow}/bin/nologin"; }
       (mkIf (usr != null) { "${usr}".uid = 1000; })
-      # { "${usr}".uid = 1000; }
     ];
     # man 5 login.defs
     security.loginDefs.settings = {
@@ -32,8 +28,8 @@ in
       FAILLOG_ENAB = "yes";
       LOG_UNKFAIL_ENAB = "no";
       # These ones enable logging of su/sg attempts to syslog. Quite important on serious machines but note that this can create privacy issues as well.
-      # SYSLOG_SU_ENAB = "yes";
-      # SYSLOG_SG_ENAB = "yes";
+      SYSLOG_SU_ENAB = if cfg.paranoia == 2 then "yes" else "no";
+      SYSLOG_SG_ENAB = if cfg.paranoia == 2 then "yes" else "no";
 
       # https://www.redhat.com/sysadmin/password-expiration-date-linux
       PASS_MAX_DAYS = 90 - (cfg.paranoia * 20);

@@ -6,13 +6,13 @@
     trustedUser = "alice";
     os = {
       enable = false;
+      privilege.enable = true;
+      random.enable = true;
       pam.enable = true;
       tty.enable = true;
+      antivirus.enable = true;
+      audit.enable = false;
       systemd.enable = false;
-    };
-    fs = {
-      enable = false;
-      impermanence.enable = false;
     };
   };
   users.users = {

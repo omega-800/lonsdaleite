@@ -16,6 +16,8 @@ in
       enable = mkEnableOption "Enables lonsdaleite";
       trustedUser = mkOption {
         type = nullOr nonEmptyStr;
+        # causes infinite recursion when trying to use this config to mutate the users attrs
+        # type = nullOr (enum allUsers);
         description =
           "The one and only trusted user. Or none, if you can't trust yourself either";
         default = null;
