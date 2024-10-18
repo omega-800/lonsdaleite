@@ -11,8 +11,8 @@
       pam.enable = true;
       tty.enable = true;
       antivirus.enable = true;
-      audit.enable = false;
       systemd.enable = false;
+      audit.enable = false;
       secureboot.enable = false;
     };
   };

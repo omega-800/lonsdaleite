@@ -27,11 +27,12 @@ let
       "";
 in
 {
-#TODO: rewrite notify script
+  #TODO: rewrite notify script
   #TODO: centralized logging
   #TODO: persist database files and configs
   options.lonsdaleite.os.antivirus =
-    (mkEnableFrom [ "os" ] "Enables antivirus (clamav)") // {
+    (mkEnableFrom [ "os" ] "Enables antivirus (clamav)")
+    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // {
       log-systemd = mkEnableOption "Forward logs to systemd";
     };
 

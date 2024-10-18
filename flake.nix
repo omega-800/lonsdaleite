@@ -23,37 +23,26 @@
     impermanence.url = "github:nix-community/impermanence";
   };
 
-  outputs = { self, nixpkgs, impermanence, ... }: {
-    nixosModules = rec {
-      lonsdaleite = { config, lib, ... }: {
-        imports = [ ./modules impermanence.nixosModules.impermanence ];
-        _module.args.lonLib = import ./lib { inherit lib config; };
+  outputs = { self, nixpkgs, impermanence, ... }:
+    let
+      # TODO: system
+      flake-lib = import ./lib/flake-lib.nix {
+        inherit self;
+        pkgs = nixpkgs.legacyPackages."x86_64-linux";
       };
-      default = lonsdaleite; # convention
-    };
-
-    nixosConfigurations.test = nixpkgs.lib.nixosSystem {
-      system = "x86_64-linux";
-      modules = [ self.nixosModules.lonsdaleite ./test ];
-    };
-
-    test-vm = self.nixosConfigurations.test.config.system.build.vm;
-
-    # to be run with nix run 
-    # TODO: remove this when done with project
-    apps.x86_64-linux = rec {
-      default = test-vm;
-      test-vm = {
-        type = "app";
-        program =
-          "${self.nixosConfigurations.test.config.system.build.vm}/bin/run-nixos-vm";
-        # "${(import nixpkgs { system = "x86_64-linux"; }).writeShellScript
-        # "test" "echo '${
-        #   builtins.concatStringsSep "xxx"
-        #   (builtins.match "(.*)exec .* -cpu max(.*)" (builtins.readFile
-        #     "${self.nixosConfigurations.test.config.system.build.vm}/bin/run-nixos-vm"))
-        # }'"}";
+    in
+    {
+      nixosModules = rec {
+        lonsdaleite = { config, lib, ... }: {
+          imports = [ ./modules impermanence.nixosModules.impermanence ];
+          _module.args.lonLib = import ./lib { inherit lib config; };
+        };
+        default = lonsdaleite; # convention
       };
+
+      nixosConfigurations = flake-lib.mkHosts "x86_64-linux";
+
+      # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
+      checks = flake-lib.mkChecks "x86_64-linux";
     };
-  };
 }
