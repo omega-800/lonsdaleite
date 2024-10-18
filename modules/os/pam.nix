@@ -36,7 +36,6 @@ in
       # TODO: implement encrypting /home, configure pam_mount
       mount = {
         enable = true;
-        # TODO: research security implications? i hope there aren't any. i mean, ssd optimization would be nice. but allow is a word i don't like to hear in this context
         cryptMountOptions = [ "allow_discard" ];
         logoutHup = true;
         #logoutKill = cfg.paranoia == 2;

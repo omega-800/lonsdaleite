@@ -1,8 +1,9 @@
 { pkgs, config, lib, lonLib, ... }:
 let
   cfg = config.lonsdaleite.os.antivirus;
-  inherit (lib) mkIf mkMerge filterAttrs mapAttrsToList;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lib)
+    mkIf mkMerge filterAttrs mapAttrsToList mkEnableOption concatStringsSep;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
   notifyScript = pkgs.writeShellScript "malware_detected" ./malware_detected.sh;
   sus-user-dirs = [ "Downloads" ".mozilla" ".vscode" ];
   all-normal-users = filterAttrs (n: c: c.isNormalUser) config.users.users;
@@ -10,15 +11,33 @@ let
     (dir: mapAttrsToList (u: c: c.home + "/" + dir) all-normal-users)
     sus-user-dirs;
   all-user-folders = mapAttrsToList (u: c: c.home) all-normal-users;
-  all-system-folders = [ "/boot" "/etc" "/nix" "/opt" "/root" "/usr" ];
+  #TODO: research
+  all-system-folders = [
+    "/boot"
+    "/etc"
+    "/nix"
+    "/opt"
+    "/root"
+    "/usr" # "/srv" "/var"
+  ];
+  prefix =
+    if cfg.log-systemd then
+      "${pkgs.systemd}/bin/systemd-cat --identifier=av-scan "
+    else
+      "";
 in
 {
-  #TODO: notify script depending on gui / tui
-  #TODO: research
+#TODO: rewrite notify script
+  #TODO: centralized logging
+  #TODO: persist database files and configs
   options.lonsdaleite.os.antivirus =
-    (mkEnableFrom [ "os" ] "Enables antivirus (clamav)") // { };
+    (mkEnableFrom [ "os" ] "Enables antivirus (clamav)") // {
+      log-systemd = mkEnableOption "Forward logs to systemd";
+    };
 
   config = mkIf cfg.enable {
+    environment =
+      mkPersistDirs [ "/etc/clamav" "/var/lib/clamav" "/var/log/clamav" ];
     security = mkMerge (
       let priv = config.lonsdaleite.os.privilege;
       in [
@@ -32,28 +51,55 @@ in
         })
       ]
     );
+    users.users.clamav.shell = "/bin/false";
     services.clamav = {
       daemon = {
         enable = true;
         settings = {
           ExtendedDetectionInfo = "yes";
           FixStaleSocket = "yes";
-          LogFileMaxSize = "5M";
+          LogFileMaxSize = "${toString (6 + (cfg.paranoia * 6))}M";
           LogRotate = "yes";
           LogTime = "yes";
-          MaxDirectoryRecursion = "15";
+          MaxDirectoryRecursion = "${toString (15 + (cfg.paranoia * 5))}";
           MaxThreads = "20";
           OnAccessExcludeUname = "clamav";
           OnAccessIncludePath = all-sus-dirs;
           OnAccessPrevention = "yes";
           User = "clamav";
           VirusEvent = "${notifyScript}";
+          #https://wiki.archlinux.org/title/ClamAV
+          DetectPUA = "yes";
+          HeuristicAlerts = "yes";
+          ScanPE = "yes";
+          ScanELF = "yes";
+          ScanOLE2 = "yes";
+          ScanPDF = "yes";
+          ScanSWF = "yes";
+          ScanXMLDOCS = "yes";
+          ScanHWP3 = "yes";
+          ScanOneNote = "yes";
+          ScanMail = "yes";
+          ScanHTML = "yes";
+          ScanArchive = "yes";
+          Bytecode = "yes";
+          AlertBrokenExecutables = "yes";
+          AlertBrokenMedia = "yes";
+          AlertEncrypted = "yes";
+          AlertEncryptedArchive = "yes";
+          AlertEncryptedDoc = "yes";
+          AlertOLE2Macros = "yes";
+          AlertPartitionIntersection = "yes";
         };
       };
       updater = {
         enable = true;
         interval = "hourly";
-        frequency = 6;
+        frequency = 4 + (cfg.paranoia * 3);
+      };
+      fangfrisch = {
+        enable = true;
+        interval = "hourly";
       };
     };
     systemd = {
@@ -65,8 +111,8 @@ in
 
         serviceConfig = {
           Type = "simple";
-          ExecStart =
-            "${pkgs.systemd}/bin/systemd-cat --identifier=av-scan ${pkgs.clamav}/bin/clamonacc -F --fdpass";
+          ExecStart = prefix
+            + "${pkgs.clamav}/bin/clamonacc -F --fdpass --allmatch";
           PrivateTmp = "yes";
           PrivateDevices = "yes";
           PrivateNetwork = "yes";
@@ -77,20 +123,22 @@ in
         description = "scan normal user directories for suspect files";
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          OnCalendar = "weekly";
+          OnCalendar = if cfg.paranoia == 2 then "daily" else "weekly";
           Unit = "av-user-scan.service";
         };
       };
 
       services.av-user-scan = {
         description = "scan normal user directories for suspect files";
-        after = [ "network-online.target" ];
-        wantedBy = [ "network-online.target" ];
+        # after = [ "network-online.target" ];
+        # wantedBy = [ "network-online.target" ];
+        after = [ "clamav-freshclam.service" ];
+        wants = [ "clamav-freshclam.service" ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart =
-            "${pkgs.systemd}/bin/systemd-cat --identifier=av-scan ${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass ${
-              toString all-user-folders
+          ExecStart = prefix
+            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${
+              concatStringsSep " " all-user-folders
             }";
         };
       };
@@ -99,22 +147,29 @@ in
         description = "scan all directories for suspect files";
         wantedBy = [ "timers.target" ];
         timerConfig = {
-          OnCalendar = "monthly";
+          OnCalendar =
+            if cfg.paranoia == 1 then
+              "weekly"
+            else if cfg.paranoia == 2 then
+              "daily"
+            else
+              "monthly";
           Unit = "av-all-scan.service";
         };
       };
 
       services.av-all-scan = {
         description = "scan all directories for suspect files";
-        after = [ "network-online.target" ];
-        wantedBy = [ "network-online.target" ];
+        # after = [ "network-online.target" ];
+        # wantedBy = [ "network-online.target" ];
+        after = [ "clamav-freshclam.service" ];
+        wants = [ "clamav-freshclam.service" ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = ''
-            ${pkgs.systemd}/bin/systemd-cat --identifier=av-scan ${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass ${
-              toString all-system-folders
-            }
-          '';
+          ExecStart = prefix
+            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${
+              concatStringsSep " " all-system-folders
+            }";
         };
       };
     };

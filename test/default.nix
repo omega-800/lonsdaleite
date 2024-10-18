@@ -13,6 +13,7 @@
       antivirus.enable = true;
       audit.enable = false;
       systemd.enable = false;
+      secureboot.enable = false;
     };
   };
   users.users = {
