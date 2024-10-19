@@ -1,22 +1,35 @@
-{ system, stdenv, fetchFromGitHub, bash, coreutils }:
-let name = "apparmor-d";
-in derivation {
-  inherit name system;
+{ system, stdenv, fetchFromGitHub, go, lib }:
+stdenv.mkDerivation {
+  pname = "apparmor-d";
+  version = "0.0.1";
+
   src = fetchFromGitHub {
-    owner = "roddhjav";
+    owner = "omega-800";
     repo = "apparmor.d";
-    rev = "f079792aeef4341487681acfd927d0d49814f637";
-    hash = "sha256-Lgs+dsshg6txB7+vTvGKRc9FpVBxUc4Lq1l5ZJ2YwY4=";
+    rev = "4cc42239f094169b08c9f17332ed2852b2ff621d";
+    hash = "sha256-ciJLYKqbMZqcTnf8rg/V9N1KfzdBOrIH+tzVc+h44BQ=";
   };
-  builder = "${bash}/bin/bash";
-  # now the question arises:
-  # how the hell should i patch all of the binary paths (as well as other 
-  # fsh-compliant paths) which are located in the nix store... 
-  args = [
-    "-c"
-    ''
-      ${coreutils}/bin/mkdir -p $out/bin
-      ${coreutils}/bin/cp -r $src/* $out/
-    ''
-  ];
+
+  nativeBuildInputs = [ go ];
+  buildPhase = ''
+    HOME=$(pwd) make
+  '';
+
+  installPhase = ''
+    DESTDIR=$out PKGNAME=apparmor-d make install
+  '';
+
+  # installFlags = [ "DESTDIR=$out" "PKGNAME=apparmor-d" ];
+
+  meta = {
+    homepage = "https://apparmor.pujol.io";
+    description = "Collection of apparmor profiles";
+    licenses = with lib.licenses; [ gpl2 ];
+    maintainers = [{
+      github = "omega-800";
+      githubId = 50942480;
+      name = "omega";
+    }];
+    platforms = [ system ];
+  };
 }

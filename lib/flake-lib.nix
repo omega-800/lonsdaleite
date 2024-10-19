@@ -53,7 +53,10 @@ rec {
     lonsdaleite = { config, lib, ... }: {
       imports =
         [ ../modules self.inputs.impermanence.nixosModules.impermanence ];
-      _module.args.lon-lib = import ./lon-lib.nix { inherit lib config; };
+      _module.args = {
+        inherit self;
+        lon-lib = import ./lon-lib.nix { inherit lib config; };
+      };
     };
     default = lonsdaleite; # convention
   };
