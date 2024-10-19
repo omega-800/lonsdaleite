@@ -1,7 +1,7 @@
 { self, pkgs, ... }:
 let
   inherit (pkgs) nixosTest;
-  inherit (pkgs.lib) mapAttrs' removeSuffix nameValuePair;
+  inherit (pkgs.lib) mapAttrs' removeSuffix nameValuePair filterAttrs hasPrefix;
 in
 {
   mkChecks = system: {
@@ -24,5 +24,5 @@ in
           inherit system;
           modules = [ self.nixosModules.lonsdaleite ../examples/${n} ];
         }))
-      (builtins.readDir ../examples);
+      (filterAttrs (n: v: !(hasPrefix "_" n)) (builtins.readDir ../examples));
 }

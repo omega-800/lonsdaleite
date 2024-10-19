@@ -3,7 +3,8 @@ let
   cfg = config.lonsdaleite.fs.permissions;
   inherit (lib) mkIf mkMerge mkDefault;
   inherit (lonLib) mkEnableFrom mkParanoiaOption mkParanoiaFrom;
-in {
+in
+{
   options.lonsdaleite.fs.permissions = (mkEnableFrom [ "fs" ] ''
     Sets hardened filesystem permissions. 
     [Partitioning guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664)
@@ -21,7 +22,30 @@ in {
     proc = mkParanoiaOption [ "" "" "" ];
   };
 
-  config = mkIf (cfg.enable) {
+  config = mkIf cfg.enable {
+    users.groups.proc = { };
+    systemd.services = {
+      systemd-logind.serviceConfig.SupplementaryGroups = [ "proc" ];
+      "user@".serviceConfig.SupplementaryGroups = [ "proc" ];
+    };
+    systemd.tmpfiles.settings = {
+      # Restrict permissions of /home/$USER so that only the owner of the
+      # directory can access it (the user). systemd-tmpfiles also has the benefit
+      # of recursively setting permissions too, with the "Z" option as seen below.
+      "restricthome"."/home/*".Z.mode = "0700";
+
+      # Make all files in /etc/nixos owned by root, and only readable by root.
+      # /etc/nixos is not owned by root by default, and configuration files can
+      # on occasion end up also not owned by root. This can be hazardous as files
+      # that are included in the rebuild may be editable by unprivileged users,
+      # so this mitigates that.
+      "restrictetcnixos"."/etc/nixos/*".Z = {
+        mode = "0000";
+        user = "root";
+        group = "root";
+      };
+    };
+
     fileSystems = {
       "/home" = {
         device = mkDefault "/home";
@@ -65,13 +89,13 @@ in {
       "/boot" = {
         device = mkDefault "/boot";
         options = [ "defaults" "nodev" "nosuid" "umask=0077" ]
-          ++ (if cfg.boot.paranoia == 3 then [ "ro" ] else [ ])
+          ++ (if cfg.boot.paranoia == 2 then [ "ro" ] else [ ])
           ++ (if cfg.boot.paranoia >= 1 then [ "noexec" ] else [ ]);
       };
       "/srv" = {
         device = mkDefault "/srv";
         options = [ "bind" "nodev" "nouser" ]
-          ++ (if cfg.srv.paranoia == 3 then [ "noexec" ] else [ ])
+          ++ (if cfg.srv.paranoia == 2 then [ "noexec" ] else [ ])
           ++ (if cfg.srv.paranoia >= 1 then [ "nosuid" ] else [ ]);
       };
       "/etc" = {
@@ -83,16 +107,16 @@ in {
         device = mkDefault "/etc/nixos";
         options = [ "defaults" "nodev" "nouser" ]
           ++ (if cfg.etc.paranoia >= 1 then [
-            "bind"
-            "nosuid"
-            "noexec"
-          ] else
-            [ ]);
+          "bind"
+          "nosuid"
+          "noexec"
+        ] else
+          [ ]);
       };
       "/" = {
         device = mkDefault "/";
         options = [ "defaults" ]
-          ++ (if cfg."/".paranoia == 3 then [ "mode=755" ] else [ ])
+          ++ (if cfg."/".paranoia == 2 then [ "mode=755" ] else [ ])
           ++ (if cfg."/".paranoia >= 1 then [ "noexec" ] else [ ]);
       };
       "/usr" = {
@@ -102,7 +126,7 @@ in {
       "/usr/share" = {
         device = mkDefault "/usr/share";
         options = [ "defaults" "nodev" ]
-          ++ (if cfg.usr.paranoia == 3 then [ "ro" ] else [ ])
+          ++ (if cfg.usr.paranoia == 2 then [ "ro" ] else [ ])
           ++ (if cfg.usr.paranoia >= 1 then [ "nosuid" ] else [ ]);
       };
       "/swap" = {
@@ -202,11 +226,6 @@ in {
           "gid=proc"
         ];
       };
-    };
-    users.groups.proc = { };
-    systemd.services = {
-      systemd-logind.serviceConfig.SupplementaryGroups = [ "proc" ];
-      "user@".serviceConfig.SupplementaryGroups = [ "proc" ];
     };
   };
 }

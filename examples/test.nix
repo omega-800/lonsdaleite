@@ -4,6 +4,7 @@
     enable = false;
     paranoia = 2;
     trustedUser = "alice";
+    decapitated = false;
     os = {
       enable = false;
       privilege.enable = true;
@@ -11,10 +12,19 @@
       pam.enable = true;
       tty.enable = true;
       antivirus.enable = true;
-      systemd.enable = false;
+      systemd.enable = true;
       audit.enable = false;
       secureboot.enable = false;
     };
+    net = {
+      ssh.enable = true;
+      sshd.enable = true;
+      firewall.enable = true;
+      macchanger.enable = true;
+      networkmanager.enable = true;
+      misc.enable = true;
+    };
+    sw = { apparmor.enable = true; };
   };
   users.users = {
     alice = {
@@ -40,7 +50,7 @@
     # woah didn't realize qemu can do serial "forwarding"
     # openssh.settings.PasswordAuthentication = lib.mkForce true;
   };
-  environment.systemPackages = with pkgs; [ lynis vulnix ];
+  environment.systemPackages = with pkgs; [ lynis vulnix vim ];
 
   boot.loader.grub.devices = [ "/dev/sda" ];
   system.stateVersion = "24.05";

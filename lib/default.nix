@@ -5,8 +5,11 @@ let
     mkOption attrByPath concatImapStringsSep concatStringsSep splitString
     findFirst mapAttrsToList filterAttrs take length mkMerge mkIf;
   inherit (lib.types) bool enum ints;
+  const = import ./const.nix;
 in
 rec {
+  inherit const;
+
   paranoiaType = ints.between 0 2;
 
   mkHighDefault = val: lib.mkOverride 900 val;

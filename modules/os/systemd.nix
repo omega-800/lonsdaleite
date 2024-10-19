@@ -5,6 +5,10 @@ let
   inherit (lonLib) mkEnableFrom mkParanoiaFrom;
 in
 {
+  # https://documentation.suse.com/smart/security/html/systemd-securing/index.html
+  # https://github.com/alegrey91/systemd-service-hardening
+  # https://gist.github.com/joachifm/022ca74fd447bd8bb2f80a133c0ab3a9
+  # TODO: research
   options.lonsdaleite.os.systemd = (mkEnableFrom [ "os" ] "Hardens systemd")
     // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // { };
 
@@ -33,7 +37,7 @@ in
           extraConfig = "Storage=none";
         };
       }
-      (mkIf (config.lonsdaleite.decapitated) {
+      (mkIf config.lonsdaleite.decapitated {
         # Given that our systems are headless, emergency mode is useless.
         # We prefer the system to attempt to continue booting so
         # that we can hopefully still access it remotely.
@@ -58,25 +62,6 @@ in
           AllowSuspend=no
           AllowHibernation=no
         '';
-      })
-      (mkIf (cfg.paranoia >= 1) {
-        tmpfiles.settings = {
-          # Restrict permissions of /home/$USER so that only the owner of the
-          # directory can access it (the user). systemd-tmpfiles also has the benefit
-          # of recursively setting permissions too, with the "Z" option as seen below.
-          "restricthome"."/home/*".Z.mode = "0700";
-
-          # Make all files in /etc/nixos owned by root, and only readable by root.
-          # /etc/nixos is not owned by root by default, and configuration files can
-          # on occasion end up also not owned by root. This can be hazardous as files
-          # that are included in the rebuild may be editable by unprivileged users,
-          # so this mitigates that.
-          "restrictetcnixos"."/etc/nixos/*".Z = {
-            mode = "0000";
-            user = "root";
-            group = "root";
-          };
-        };
       })
       (mkIf (cfg.paranoia == 2) {
         services =
@@ -107,6 +92,13 @@ in
               "pread64"
               "getrandom"
             ];
+            dirs = {
+              InaccessibleDirectories = "/home";
+              ReadOnlyDirectories = "/var";
+              LimitNPROC = 1;
+              LimitFSIZE = 0;
+              DeviceALlow = "/dev/null rw";
+            };
             basic = {
               ProtectClock = true;
               ProtectProc = "invisible";
@@ -123,6 +115,11 @@ in
               ProtectControlGroups = true;
               ProtectSystem = "strict";
             } // basic;
+            kernel = {
+              ProtectKernelTunables = true;
+              ProtectKernelModules = true;
+            };
+            def = kernel // virtDef;
             virt = {
               ProtectKernelLogs = true;
               PrivateIPC = true;
@@ -130,11 +127,6 @@ in
               RestrictNamespaces = true;
               SystemCallArchitectures = "native";
             };
-            kernel = {
-              ProtectKernelTunables = true;
-              ProtectKernelModules = true;
-            };
-            def = kernel // virtDef;
           in
           {
             #TODO: services.<name>.confinement.enable = true;
@@ -238,87 +230,86 @@ in
               IPAddressDeny = "any";
               inherit SystemCallFilter;
             } // def // virt;
-            /* NetworkManager-dispatcher.serviceConfig = {
-               ProtectHome = true;
-               ProtectControlGroups = true;
-               ProtectKernelLogs = true;
-               ProtectHostname = true;
-               #ProtectClock = true;
-               ProtectProc = "invisible";
-               ProcSubset = "pid";
-               PrivateUsers = true;
-               PrivateDevices = true;
-               MemoryDenyWriteExecute = true;
-               NoNewPrivileges = true;
-               LockPersonality = true;
-               RestrictRealtime = true;
-               RestrictSUIDSGID = true;
-               RestrictAddressFamilies = "AF_INET";
-               RestrictNamespaces = true;
-               inherit SystemCallFilter;
-               SystemCallArchitectures = "native";
-               UMask = "0077";
-               IPAddressDeny = "any";
-             }//kernel;
-             display-manager.serviceConfig = {
-               ProtectKernelLogs = true; # so we won't need all of this
-             }//kernel;
-             NetworkManager.serviceConfig = {
-               NoNewPrivileges = true;
-               #ProtectClock = true;
-               ProtectKernelLogs = true;
-               ProtectControlGroups = true;
-               SystemCallArchitectures = "native";
-               MemoryDenyWriteExecute= true;
-               ProtectProc = "invisible";
-               ProcSubset = "pid";
-               RestrictNamespaces = true;
-               ProtectHome = true;
-               PrivateTmp = true;
-               UMask = "0077";
-             }//kernel;
-             "dbus".serviceConfig = {
-               PrivateTmp = true;
-               PrivateNetwork = true;
-               ProtectSystem = "full";
-               ProtectHome = true;
-               #SystemCallFilter = "~@clock @cpu-emulation @module @mount @obsolete @raw-io @reboot @swap";
-               NoNewPrivileges = true;
-               CapabilityBoundingSet=["~CAP_SYS_TIME" "~CAP_SYS_PACCT" "~CAP_KILL" "~CAP_WAKE_ALARM" "~CAP_SYS_BOOT" "~CAP_SYS_CHROOT" "~CAP_LEASE" "~CAP_MKNOD" "~CAP_NET_ADMIN" "~CAP_SYS_ADMIN" "~CAP_SYSLOG" "~CAP_NET_BIND_SERVICE" "~CAP_NET_BROADCAST" "~CAP_AUDIT_WRITE" "~CAP_AUDIT_CONTROL" "~CAP_SYS_RAWIO" "~CAP_SYS_NICE" "~CAP_SYS_RESOURCE" "~CAP_SYS_TTY_CONFIG" "~CAP_SYS_MODULE" "~CAP_IPC_LOCK" "~CAP_LINUX_IMMUTABLE" "~CAP_BLOCK_SUSPEND" "~CAP_MAC_*" "~CAP_DAC_*" "~CAP_FOWNER" "~CAP_IPC_OWNER" "~CAP_SYS_PTRACE" "~CAP_SETUID" "~CAP_SETGID" "~CAP_SETPCAP" "~CAP_FSETID" "~CAP_SETFCAP" "~CAP_CHOWN"];
-               ProtectKernelLogs= true;
-               #ProtectClock= true;
-               ProtectControlGroups= true;
-               RestrictNamespaces= true;
-               #MemoryDenyWriteExecute= true;
-               #RestrictAddressFamilies= ["~AF_PACKET" "~AF_NETLINK"];
-               ProtectHostname= true;
-               LockPersonality= true;
-               RestrictRealtime= true;
-               PrivateUsers= true;
-             }//kernel;
-             reload-systemd-vconsole-setup.serviceConfig = {
-               ##ProtectSystem = "strict";
-               ProtectHome = true;
-               ProtectControlGroups = true;
-               ProtectKernelLogs = true;
-               ProtectClock = true;
-               PrivateUsers = true;
-               PrivateDevices = true;
-               #MemoryDenyWriteExecute = true;
-               NoNewPrivileges = true;
-               LockPersonality = true;
-               RestrictRealtime = true;
-               RestrictNamespaces = true;
-               UMask = "0077";
-               IPAddressDeny = "any";
-             }//kernel;
-             "user@1000".serviceConfig = {
-               #PrivateUsers = true;  # Be cautious, as this may restrict user operations
-               PrivateDevices = true;
-               RestrictAddressFamilies = "AF_INET AF_INET6";
-               SystemCallFilter = [ "@system-service" ];  # Adjust based on user needs
-             } // def // virt;
-            */
+            display-manager.serviceConfig = {
+              ProtectKernelLogs = true; # so we won't need all of this
+            } // kernel;
+            "dbus".serviceConfig = {
+              PrivateTmp = true;
+              #   PrivateNetwork = true;
+              # ProtectSystem = "full";
+              ProtectHome = true;
+              #SystemCallFilter = "~@clock @cpu-emulation @module @mount @obsolete @raw-io @reboot @swap";
+              # NoNewPrivileges = true;
+              #   CapabilityBoundingSet = [
+              #     "~CAP_SYS_TIME"
+              #     "~CAP_SYS_PACCT"
+              #     "~CAP_KILL"
+              #     "~CAP_WAKE_ALARM"
+              #     "~CAP_SYS_BOOT"
+              #     "~CAP_SYS_CHROOT"
+              #     "~CAP_LEASE"
+              #     "~CAP_MKNOD"
+              #     "~CAP_NET_ADMIN"
+              #     "~CAP_SYS_ADMIN"
+              #     "~CAP_SYSLOG"
+              #     "~CAP_NET_BIND_SERVICE"
+              #     "~CAP_NET_BROADCAST"
+              #     "~CAP_AUDIT_WRITE"
+              #     "~CAP_AUDIT_CONTROL"
+              #     "~CAP_SYS_RAWIO"
+              #     "~CAP_SYS_NICE"
+              #     "~CAP_SYS_RESOURCE"
+              #     "~CAP_SYS_TTY_CONFIG"
+              #     "~CAP_SYS_MODULE"
+              #     "~CAP_IPC_LOCK"
+              #     "~CAP_LINUX_IMMUTABLE"
+              #     "~CAP_BLOCK_SUSPEND"
+              #     "~CAP_MAC_*"
+              #     "~CAP_DAC_*"
+              #     "~CAP_FOWNER"
+              #     "~CAP_IPC_OWNER"
+              #     "~CAP_SYS_PTRACE"
+              #     "~CAP_SETUID"
+              #     "~CAP_SETGID"
+              #     "~CAP_SETPCAP"
+              #     "~CAP_FSETID"
+              #     "~CAP_SETFCAP"
+              #     "~CAP_CHOWN"
+              #   ];
+              ProtectKernelLogs = true;
+              #ProtectClock= true;
+              ProtectControlGroups = true;
+              RestrictNamespaces = true;
+              #MemoryDenyWriteExecute= true;
+              #RestrictAddressFamilies= ["~AF_PACKET" "~AF_NETLINK"];
+              ProtectHostname = true;
+              # LockPersonality = true;
+              # RestrictRealtime = true;
+              # PrivateUsers = true;
+            } // kernel;
+            reload-systemd-vconsole-setup.serviceConfig = {
+              ##ProtectSystem = "strict";
+              ProtectHome = true;
+              ProtectControlGroups = true;
+              ProtectKernelLogs = true;
+              ProtectClock = true;
+              PrivateUsers = true;
+              PrivateDevices = true;
+              #MemoryDenyWriteExecute = true;
+              NoNewPrivileges = true;
+              LockPersonality = true;
+              RestrictRealtime = true;
+              RestrictNamespaces = true;
+              UMask = "0077";
+              IPAddressDeny = "any";
+            } // kernel;
+            "user@1000".serviceConfig = {
+              #PrivateUsers = true;  # Be cautious, as this may restrict user operations
+              PrivateDevices = true;
+              RestrictAddressFamilies = "AF_INET AF_INET6";
+              SystemCallFilter =
+                [ "@system-service" ]; # Adjust based on user needs
+            } // def // virt;
             "nixos-rebuild-switch-to-configuration".serviceConfig = {
               ProtectHome = true;
               NoNewPrivileges = true; # Prevent gaining new privileges

@@ -4,6 +4,7 @@ let
   inherit (lib) mkIf mkMerge mkDefault mkForce mkOption concatMapStrings;
   inherit (lib.types) listOf nonEmptyStr;
   inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+  inherit (lonLib.const) systemd;
   usr = config.lonsdaleite.trustedUser;
 in
 {
@@ -155,5 +156,8 @@ in
         };
       })
     ];
+    # TODO
+    systemd.services.sshd.serviceConfig =
+      mkIf config.lonsdaleite.os.systemd.enable (systemd.def // systemd.usr);
   };
 }

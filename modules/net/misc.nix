@@ -1,13 +1,10 @@
-{ pkgs, config, lib, lonLib, ... }:
+{ config, lib, lonLib, ... }:
 let
   cfg = config.lonsdaleite.net.misc;
-  inherit (lib) mkIf mkMerge concatMapStrings mkOption mkDefault;
-  inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistFiles mkPersistDirs;
-  usr = config.lonsdaleite.trustedUser;
+  inherit (lib) mkIf mkDefault;
+  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
 in
 {
-  #TODO: implement
   options.lonsdaleite.net.misc =
     (mkEnableFrom [ "net" ] "Hardens random network related things")
     // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
@@ -19,7 +16,8 @@ in
       # Use networkd instead of the pile of shell scripts
       useNetworkd = true;
       dhcpcd.enable = false;
-      useDHCP = false;
+      # servers should have static IP's assigned, right?
+      useDHCP = mkDefault (!config.lonsdaleite.decapitated);
       nameservers = [
         # DNSWatch
         "84.200.69.80"
@@ -30,33 +28,14 @@ in
         # Cloudflare
         "1.1.1.1"
       ];
-      networkmanager = {
-        # TODO: add option to enable networkmanager
-        enable = mkDefault false;
-        ethernet.macAddress = "random";
-        wifi = {
-          macAddress = "random";
-          scanRandMacAddress = true;
-        };
-        # Enable IPv6 privacy extensions in NetworkManager.
-        connectionConfig."ipv6.ip6-privacy" = 2;
-      };
     };
 
     services.resolved.dnssec = "true";
-
-    users = mkIf
-      (
-        # usr != null
-        false
-      )
-      { users.${usr}.extraGroups = [ "networkmanager" ]; };
 
     # The notion of "online" is a broken concept
     # https://github.com/systemd/systemd/blob/e1b45a756f71deac8c1aa9a008bd0dab47f64777/NEWS#L13
     systemd = {
       services = {
-        NetworkManager-wait-online.enable = false;
         # Do not take down the network for too long when upgrading,
         # This also prevents failures of services that are restarted instead of stopped.
         # It will use `systemctl restart` rather than stopping it with `systemctl stop`
@@ -71,14 +50,5 @@ in
         config.networkConfig.IPv6PrivacyExtensions = "kernel";
       };
     };
-
-    environment = mkMerge [
-      (mkPersistDirs [ "/etc/NetworkManager/system-connections" ])
-      (mkPersistFiles [
-        "/var/lib/NetworkManager/seen-bssids"
-        "/var/lib/NetworkManager/timestamps"
-        "/var/lib/NetworkManager/secret_key"
-      ])
-    ];
   };
 }

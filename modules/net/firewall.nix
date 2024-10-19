@@ -20,7 +20,7 @@ in {
 
       # Keep dmesg/journalctl -k output readable by NOT logging
       # each refused connection on the open internet.
-      logRefusedConnections = cfg.paranoia != 2;
+      logRefusedConnections = cfg.paranoia > 1;
 
       allowedTCPPorts = [ ];
       allowedUDPPorts = [ ];

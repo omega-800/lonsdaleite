@@ -9,9 +9,13 @@
   # https://documentation.suse.com/sles/12-SP5/html/SLES-all/preface-security.html
   # https://wiki.archlinux.org/title/Security
   # https://owasp.org/
+  # https://wiki.gentoo.org/wiki/Project:Hardened
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html
+  # https://github.com/NixOS/nixpkgs/issues/7220
+  # https://github.com/NixOS/nixpkgs/pull/7212
+  # https://www.redhat.com/en/blog/automated-auditing-system-using-scap
 
   description = "NixOS module to harden your system";
 
