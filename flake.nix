@@ -1,5 +1,6 @@
 {
   # awesome resources this project is based on, many kudos
+  # https://xeiaso.net/blog/paranoid-nixos-2021-07-18/
   # https://github.com/cynicsketch/nix-mineral
   # https://github.com/Kicksecure/security-misc
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html
@@ -10,6 +11,9 @@
   # https://wiki.archlinux.org/title/Security
   # https://owasp.org/
   # https://wiki.gentoo.org/wiki/Project:Hardened
+  # https://github.com/redcode-labs/RedNixOS
+  # https://github.com/qbit/xin
+  # https://github.com/Mic92/dotfiles
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html
@@ -27,7 +31,7 @@
     impermanence.url = "github:nix-community/impermanence";
   };
 
-  outputs = { self, nixpkgs, impermanence, ... }:
+  outputs = { self, nixpkgs, ... }:
     let
       # TODO: system
       flake-lib = import ./lib/flake-lib.nix {
@@ -36,17 +40,9 @@
       };
     in
     {
-      nixosModules = rec {
-        lonsdaleite = { config, lib, ... }: {
-          imports = [ ./modules impermanence.nixosModules.impermanence ];
-          _module.args.lonLib = import ./lib { inherit lib config; };
-        };
-        default = lonsdaleite; # convention
-      };
-
+      nixosModules = flake-lib.mkModule;
       nixosConfigurations = flake-lib.mkHosts "x86_64-linux";
-
-      # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
       checks = flake-lib.mkChecks "x86_64-linux";
+      packages = flake-lib.mkPkgs "x86_64-linux";
     };
 }

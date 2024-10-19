@@ -1,5 +1,5 @@
-{ lonLib, ... }: {
+{ lon-lib, ... }: {
   imports = [ ./impermanence.nix ./permissions.nix ./usbguard.nix ];
-  options.lonsdaleite.fs = (lonLib.mkEnableFrom [ ] "hardens filesystem")
-    // (lonLib.mkParanoiaFrom [ ] [ ]);
+  options.lonsdaleite.fs = (lon-lib.mkEnableFrom [ ] "hardens filesystem")
+    // (lon-lib.mkParanoiaFrom [ ] [ ]);
 }

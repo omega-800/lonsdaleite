@@ -1,8 +1,8 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.misc;
   inherit (lib) mkIf mkDefault;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in
 {
   options.lonsdaleite.net.misc =

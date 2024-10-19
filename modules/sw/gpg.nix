@@ -1,8 +1,8 @@
-{ pkgs, config, lib, lonLib, ... }:
+{ pkgs, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.sw.gpg;
   inherit (lib) mkIf;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in {
   # TODO: research
   options.lonsdaleite.sw.gpg = (mkEnableFrom [ "sw" ] "Enables gpg agent")

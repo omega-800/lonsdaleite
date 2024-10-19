@@ -1,8 +1,8 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.hw.memory;
   inherit (lib) mkIf;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in
 {
   options.lonsdaleite.hw.memory = (mkEnableFrom [ "hw" ] "Hardens memory")

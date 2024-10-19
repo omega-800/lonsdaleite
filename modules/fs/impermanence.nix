@@ -1,8 +1,8 @@
-{ inputs, config, lib, lonLib, ... }:
+{ inputs, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.fs.impermanence;
   inherit (lib) mkIf mkMerge mkDefault mkEnableOption;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEnableDef;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEnableDef;
   isFsEnabled = fsType:
     (builtins.elem fsType config.boot.initrd.supportedFilesystems)
     || config.fileSystems."/".fsType == fsType;

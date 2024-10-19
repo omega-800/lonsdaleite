@@ -1,11 +1,11 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 # https://github.com/MatthewCash/nixos-config/blob/main/nixos/secureboot.nix
 # https://github.com/nix-community/lanzaboote/blob/master/docs/QUICK_START.md
 # TODO: research, implement
 let
   cfg = config.lonsdaleite.os.secureboot;
   inherit (lib) mkIf;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
 in
 {
   options.lonsdaleite.os.secureboot =

@@ -13,6 +13,7 @@
       tty.enable = true;
       antivirus.enable = true;
       systemd.enable = true;
+      # TODO
       audit.enable = false;
       secureboot.enable = false;
     };

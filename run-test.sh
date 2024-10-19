@@ -4,7 +4,7 @@
 extraargs=""
 rmtmprun() { sudo rm ./run.sh; }
 sudo rm nixos.qcow2
-nix build .#nixosConfigurations.test.config.system.build.vm || exit 1
+nix build .#nixosConfigurations.test.config.system.build.vm --show-trace || exit 1
 cp ./result/bin/run-nixos-vm ./run.sh
 trap rmtmprun EXIT
 sudo chmod 500 run.sh

@@ -3,7 +3,8 @@ let
   rootConfig = config.lonsdaleite;
   inherit (lib)
     mkOption attrByPath concatImapStringsSep concatStringsSep splitString
-    findFirst mapAttrsToList filterAttrs take length mkMerge mkIf;
+    findFirst mapAttrsToList filterAttrs take length mkMerge mkIf hasPrefix
+    hasSuffix;
   inherit (lib.types) bool enum ints;
   const = import ./const.nix;
 in
@@ -87,4 +88,12 @@ rec {
     mkIf config.lonsdaleite.fs.impermanence.enable {
       persistence."/nix/persist" = { inherit directories; };
     };
+
+  # yeah nice try, yields infinite recursion
+  mkImport = dir:
+    map (n: v: n) (filterAttrs
+      (n: v:
+        (!hasPrefix "_" n) && ((v == "regular" && hasSuffix ".nix" n)
+        || (v == "directory" && builtins.pathExists "${dir}/${n}/default.nix")))
+      (builtins.readDir dir));
 }

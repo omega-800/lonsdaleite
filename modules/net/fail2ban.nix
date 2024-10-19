@@ -1,9 +1,9 @@
-{ options, config, lib, lonLib, ... }:
+{ options, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.fail2ban;
   svc = cfg.integrations;
   inherit (lib) mkIf mkMerge mkOption mkDefault mkAfter genAttrs;
-  inherit (lonLib)
+  inherit (lon-lib)
     mkEnableFrom mkParanoiaFrom mkEnableDef mkPersistDirs mkPersistFiles;
   f2bGitUrl =
     "https://raw.githubusercontent.com/fail2ban/fail2ban/9a558589d7e67bfd553641bd9c074f85f97c50f4";

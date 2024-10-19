@@ -1,9 +1,9 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.ssh;
   inherit (lib) mkIf mkMerge concatMapStrings mkOption;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEtcPersist mkPersistDirs;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEtcPersist mkPersistDirs;
 in
 {
   options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")

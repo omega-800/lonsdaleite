@@ -1,10 +1,10 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.sshd;
   inherit (lib) mkIf mkMerge mkDefault mkForce mkOption concatMapStrings;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
-  inherit (lonLib.const) systemd;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+  inherit (lon-lib.const) systemd;
   usr = config.lonsdaleite.trustedUser;
 in
 {
@@ -128,7 +128,7 @@ in
           # denies access to all other users by default
           AllowUsers = if usr == null then [ ] else [ usr ];
           AllowGroups =
-            if usr == null then [ ] else [ (lonLib.userByName usr).group ];
+            if usr == null then [ ] else [ (lon-lib.userByName usr).group ];
         }];
         allowSFTP = false;
       })

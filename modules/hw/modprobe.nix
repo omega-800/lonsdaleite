@@ -1,9 +1,9 @@
 # https://github.com/Kicksecure/security-misc/blob/master/etc/modprobe.d/30_security-misc_disable.conf
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.hw.modules;
   inherit (lib) mkIf mkAttrs mkMerge mapListToAttrs;
-  inherit (lonLib)
+  inherit (lon-lib)
     mkEnableFrom mkParanoiaFrom fileNamesNoExt mkEnableDef mkPersistDirs;
   modules = fileNamesNoExt ./modprobe;
 in

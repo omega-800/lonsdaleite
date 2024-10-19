@@ -1,8 +1,8 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.sw.isolate;
   inherit (lib) mkIf;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in {
   # TODO: research
   options.lonsdaleite.sw.isolate = (mkEnableFrom [ "sw" ] "Enables isolate")

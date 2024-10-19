@@ -1,9 +1,9 @@
-{ pkgs, config, lib, lonLib, ... }:
+{ pkgs, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.os.antivirus;
   inherit (lib)
     mkIf mkMerge filterAttrs mapAttrsToList mkEnableOption concatStringsSep;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
   notifyScript = pkgs.writeShellScript "malware_detected" ./malware_detected.sh;
   sus-user-dirs = [ "Downloads" ".mozilla" ".vscode" ];
   all-normal-users = filterAttrs (n: c: c.isNormalUser) config.users.users;

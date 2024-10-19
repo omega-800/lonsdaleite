@@ -1,28 +1,60 @@
 { self, pkgs, ... }:
 let
-  inherit (pkgs) nixosTest;
-  inherit (pkgs.lib) mapAttrs' removeSuffix nameValuePair filterAttrs hasPrefix;
+  inherit (pkgs) nixosTest callPackage;
+  inherit (pkgs.lib)
+    mapAttrs' removeSuffix nameValuePair filterAttrs hasPrefix hasSuffix;
+  inherit (builtins) readDir;
 in
-{
-  mkChecks = system: {
-    "${system}" = mapAttrs'
+rec {
+  mapDirs = mapFn: dir:
+    mapAttrs' (n: v: mapFn n v) (filterAttrs
       (n: v:
-        let name = removeSuffix ".nix" n;
+        (!hasPrefix "_" n) && ((v == "regular" && hasSuffix ".nix" n)
+        || (v == "directory" && builtins.pathExists "${dir}/${n}/default.nix")))
+      (readDir dir));
+
+  mkName = filename:
+    if hasSuffix ".nix" filename then
+      removeSuffix ".nix" filename
+    else
+      filename;
+
+  # https://nixos.org/manual/nixos/stable/index.html#sec-nixos-tests
+  mkChecks = system: {
+    "${system}" = mapDirs
+      (n: v:
+        let name = mkName n;
         in nameValuePair name (nixosTest ({
           inherit name;
           nodes.test = { ... }: {
             imports = [ self.nixosModules.lonsdaleite ../examples/test.nix ];
           };
-        } // (import ../checks/${n}))))
-      (builtins.readDir ../checks);
+        } // (import ../checks/${n})))) ../checks;
   };
+
   mkHosts = system:
-    mapAttrs'
+    mapDirs
       (n: v:
-        let name = removeSuffix ".nix" n;
+        let name = mkName n;
         in nameValuePair name (self.inputs.nixpkgs.lib.nixosSystem {
           inherit system;
           modules = [ self.nixosModules.lonsdaleite ../examples/${n} ];
-        }))
-      (filterAttrs (n: v: !(hasPrefix "_" n)) (builtins.readDir ../examples));
+        })) ../examples;
+
+  mkPkgs = system: {
+    "${system}" = mapDirs
+      (n: v:
+        let name = mkName n;
+        in nameValuePair name (callPackage ../packages/${n} { inherit system; }))
+      ../packages;
+  };
+
+  mkModule = rec {
+    lonsdaleite = { config, lib, ... }: {
+      imports =
+        [ ../modules self.inputs.impermanence.nixosModules.impermanence ];
+      _module.args.lon-lib = import ./lon-lib.nix { inherit lib config; };
+    };
+    default = lonsdaleite; # convention
+  };
 }

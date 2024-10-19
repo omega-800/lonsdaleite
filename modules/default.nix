@@ -1,8 +1,8 @@
-{ lib, lonLib, config, ... }:
+{ lib, lon-lib, config, ... }:
 let
   inherit (lib) mkEnableOption mkOption mapAttrsToList filterAttrs;
   inherit (lib.types) enum nullOr nonEmptyStr;
-  inherit (lonLib) mkParanoiaOptionDef mkEnableDef;
+  inherit (lon-lib) mkParanoiaOptionDef mkEnableDef mkImport;
 in
 {
   imports = [ ./fs ./hw ./net ./os ./sw ];

@@ -1,8 +1,8 @@
-{ config, lib, lonLib, options, ... }:
+{ config, lib, lon-lib, options, ... }:
 let
   cfg = config.lonsdaleite.fs.usbguard;
   inherit (lib) mkIf mkMerge mkDefault mkEnableOption;
-  inherit (lonLib) mkEnableFrom mkParanoiaOption mkMineralLink mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaOption mkMineralLink mkParanoiaFrom;
   usr = config.lonsdaleite.trustedUser;
 in {
   options.lonsdaleite.fs.usbguard =

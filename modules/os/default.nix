@@ -1,4 +1,4 @@
-{ lonLib, ... }: {
+{ lon-lib, ... }: {
   imports = [
     ./pam.nix
     ./random.nix
@@ -10,5 +10,5 @@
     ./secureboot.nix
   ];
   options.lonsdaleite.os =
-    lonLib.mkEnableFrom [ ] "hardens general os components";
+    lon-lib.mkEnableFrom [ ] "hardens general os components";
 }

@@ -1,8 +1,8 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.fs.permissions;
   inherit (lib) mkIf mkMerge mkDefault;
-  inherit (lonLib) mkEnableFrom mkParanoiaOption mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaOption mkParanoiaFrom;
 in
 {
   options.lonsdaleite.fs.permissions = (mkEnableFrom [ "fs" ] ''

@@ -1,8 +1,8 @@
-{ pkgs, config, lib, lonLib, ... }:
+{ pkgs, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.os.privilege;
   inherit (lib) mkIf mkEnableOption mkMerge;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkEnableDef;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEnableDef;
   usr = config.lonsdaleite.trustedUser;
 in
 {

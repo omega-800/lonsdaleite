@@ -1,9 +1,9 @@
-{ pkgs, config, lib, lonLib, ... }:
+{ pkgs, config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.macchanger;
   inherit (lib) mkIf concatMapStrings mkOption attrNames;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in {
   options.lonsdaleite.net.macchanger =
     (mkEnableFrom [ "net" ] "Enables MAC changer service") // {

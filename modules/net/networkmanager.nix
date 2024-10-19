@@ -1,9 +1,9 @@
-{ config, lib, lonLib, ... }:
+{ config, lib, lon-lib, ... }:
 let
   cfg = config.lonsdaleite.net.networkmanager;
   inherit (lib) mkIf mkMerge mkDefault;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lonLib) mkEnableFrom mkParanoiaFrom mkPersistFiles mkPersistDirs;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistFiles mkPersistDirs;
   usr = config.lonsdaleite.trustedUser;
 in
 {
