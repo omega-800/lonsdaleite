@@ -30,6 +30,7 @@
     # TODO: does flake-parts enable lazy evaluation of flake inputs?
     # i don't like trashing projects full with deps
     impermanence.url = "github:nix-community/impermanence";
+    apparmor-d.url = "github:omega-800/apparmor.d";
   };
 
   outputs = { self, nixpkgs, ... }:

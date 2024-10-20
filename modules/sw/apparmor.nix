@@ -4,7 +4,7 @@ let
   inherit (lib) mkIf concatMapAttrs;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs mkEtcPersist;
   inherit (builtins) match elemAt readDir readFile;
-  inherit (self.packages.${pkgs.system}) apparmor-d;
+  inherit (self.inputs) apparmor-d;
 in
 {
   # https://gitlab.com/apparmor/apparmor
