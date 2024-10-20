@@ -4,7 +4,7 @@ let
   inherit (lib) mkIf concatMapAttrs;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs mkEtcPersist;
   inherit (builtins) match elemAt readDir readFile;
-  inherit (self.inputs) apparmor-d;
+  inherit (self.inputs.apparmor-d.packages.${pkgs.system}) apparmor-d;
 in
 {
   # https://gitlab.com/apparmor/apparmor
@@ -17,11 +17,7 @@ in
     environment = mkPersistDirs [ "/etc/apparmor" ]
       // (mkEtcPersist "apparmor/parser.conf" ''
       Optimize=compress-fast
-    '') // {
-      #TODO: add apparmor-d
-      #etc."apparmor.d".source = "${self.packages.x86_64-linux.apparmor-d}/etc/apparmor.d"
-    };
-    #systemd.tmpfiles.settings.apparmor-d."/etc/apparmor.d";
+    '') // { };
     security.apparmor =
       let
         # FIXME: there HAS to be a better way to do this
@@ -40,7 +36,6 @@ in
       {
         enable = true;
         killUnconfinedConfinables = true;
-        #TODO: implement? write my own? 
         packages = [ apparmor-d ];
         includes = lsRec "${apparmor-d}/etc/apparmor.d";
         policies = {
