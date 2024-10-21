@@ -28,9 +28,6 @@ in
 
   config = mkIf cfg.enable {
     security.apparmor = {
-      # doesn't do much apart from including ${package}/etc/apparmor.d 
-      # in /etc/apparmor/{parser,logprof}.conf 
-      # is this needed for apparmor to recognize these profiles? 
       packages = [ apparmor-d ];
       policies =
         if cfg.enableAllProfiles then
@@ -62,13 +59,14 @@ in
             cfg.profiles);
     };
     environment = {
-      # is this necessary if apparmor-d is included inside of security.apparmor.packages?
       systemPackages = [ apparmor-d ];
       etc."apparmor/parser.conf".text = ''
         Optimize=compress-fast
       '';
     };
-    specialisation.disabledApparmorD.configuration.security.apparmor-d.enable =
-      false;
+    specialisation.disabledApparmorD.configuration = {
+      security.apparmor-d.enable = false;
+      system.nixos.tags = [ "without-apparmor.d" ];
+    };
   };
 }
