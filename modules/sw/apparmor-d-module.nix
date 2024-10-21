@@ -68,5 +68,7 @@ in
         Optimize=compress-fast
       '';
     };
+    specialisation.disabledApparmorD.configuration.security.apparmor-d.enable =
+      false;
   };
 }
