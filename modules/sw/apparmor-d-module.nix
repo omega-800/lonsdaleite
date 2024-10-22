@@ -2,7 +2,7 @@
 let
   inherit (lib)
     mkEnableOption mkOption types mkIf assertMsg pathIsRegularFile filterAttrs
-    mapAttrsToList genAttrs mkForce;
+    mapAttrsToList genAttrs mkForce mkDefault;
   inherit (builtins) readDir hasAttr mapAttrs readFile;
   inherit (self.inputs.apparmor-d.packages.${pkgs.system}) apparmor-d;
   # inherit (self.packages.${pkgs.system}) apparmor-d;
@@ -36,23 +36,22 @@ in
       policies =
         if (cfg.allProfiles != "disable") then
           (genAttrs allProfiles (name: {
-            enable =
-              if (hasAttr name cfg.profiles) then
-                (cfg.profiles.${name} != "disable")
-              else
-                true;
-            enforce = (if (hasAttr name cfg.profiles) then
+            enable = mkDefault (if (hasAttr name cfg.profiles) then
+              (cfg.profiles.${name} != "disable")
+            else
+              true);
+            enforce = mkDefault ((if (hasAttr name cfg.profiles) then
               cfg.profiles.${name}
             else
-              cfg.allProfiles) == "enforce";
+              cfg.allProfiles) == "enforce");
             # profile = readFile "${apparmor-d}/etc/apparmor.d/${name}";
             profile = ''include "${apparmor-d}/etc/apparmor.d/${name}"'';
           }))
         else
           (mapAttrs
             (name: value: {
-              enable = value != "disable";
-              enforce = value == "enforce";
+              enable = mkDefault (value != "disable");
+              enforce = mkDefault (value == "enforce");
               profile =
                 let file = "${apparmor-d}/etc/apparmor.d/${name}";
                 in assert assertMsg (pathIsRegularFile file)
@@ -67,6 +66,7 @@ in
         Optimize=compress-fast
       '';
     };
+    # provide alternative boot entry in case apparmor rules break things
     specialisation.disabledApparmorD.configuration = {
       security.apparmor-d.enable = mkForce false;
       system.nixos.tags = [ "without-apparmor.d" ];
