@@ -7,16 +7,16 @@ let
   inherit (self.inputs.apparmor-d.packages.${pkgs.system}) apparmor-d;
   # inherit (self.packages.${pkgs.system}) apparmor-d;
   cfg = config.security.apparmor-d;
-  allProfiles = mapAttrsToList (n: v: n) (filterAttrs (n: v: v == "regular")
+  allProfileNames = mapAttrsToList (n: v: n) (filterAttrs (n: v: v == "regular")
     (readDir "${apparmor-d}/etc/apparmor.d"));
-  profileActionType = types.enum [ "disable" "complain" "enforce" ];
+  profileStatus = types.enum [ "disable" "complain" "enforce" ];
 in
 {
   options.security.apparmor-d = {
     enable = mkEnableOption "Enables apparmor.d support";
 
-    allProfiles = mkOption {
-      type = profileActionType;
+    statusAll = mkOption {
+      type = profileStatus;
       default = "disable";
       description = ''
         Can be set to "enforce" or "complain" to enable all profiles and set their flags to enforce or complain respectively
@@ -24,7 +24,7 @@ in
     };
 
     profiles = mkOption {
-      type = types.attrsOf profileActionType;
+      type = types.attrsOf profileStatus;
       default = { };
       description = "Set of apparmor profiles to include from apparmor.d";
     };
@@ -34,8 +34,8 @@ in
     security.apparmor = {
       packages = [ apparmor-d ];
       policies =
-        if (cfg.allProfiles != "disable") then
-          (genAttrs allProfiles (name: {
+        if (cfg.statusAll != "disable") then
+          (genAttrs allProfileNames (name: {
             enable = mkDefault (if (hasAttr name cfg.profiles) then
               (cfg.profiles.${name} != "disable")
             else
@@ -43,7 +43,7 @@ in
             enforce = mkDefault ((if (hasAttr name cfg.profiles) then
               cfg.profiles.${name}
             else
-              cfg.allProfiles) == "enforce");
+              cfg.statusAll) == "enforce");
             # profile = readFile "${apparmor-d}/etc/apparmor.d/${name}";
             profile = ''include "${apparmor-d}/etc/apparmor.d/${name}"'';
           }))
