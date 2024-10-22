@@ -7,23 +7,23 @@
     decapitated = false;
     os = {
       enable = false;
-      privilege.enable = true;
-      random.enable = true;
-      pam.enable = true;
-      tty.enable = true;
-      antivirus.enable = true;
-      systemd.enable = true;
+      # privilege.enable = true;
+      # random.enable = true;
+      # pam.enable = true;
+      # tty.enable = true;
+      # antivirus.enable = true;
+      # systemd.enable = true;
       # TODO
       audit.enable = false;
       secureboot.enable = false;
     };
     net = {
-      ssh.enable = true;
-      sshd.enable = true;
-      firewall.enable = true;
-      macchanger.enable = true;
-      networkmanager.enable = true;
-      misc.enable = true;
+      # ssh.enable = true;
+      # sshd.enable = true;
+      # firewall.enable = true;
+      # macchanger.enable = true;
+      # networkmanager.enable = true;
+      # misc.enable = true;
     };
     sw = { apparmor.enable = true; };
   };

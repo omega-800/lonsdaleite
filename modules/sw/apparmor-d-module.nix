@@ -2,27 +2,31 @@
 let
   inherit (lib)
     mkEnableOption mkOption types mkIf assertMsg pathIsRegularFile filterAttrs
-    mapAttrsToList genAttrs;
-  inherit (builtins) readDir hasAttr mapAttrs;
+    mapAttrsToList genAttrs mkForce;
+  inherit (builtins) readDir hasAttr mapAttrs readFile;
   inherit (self.inputs.apparmor-d.packages.${pkgs.system}) apparmor-d;
+  # inherit (self.packages.${pkgs.system}) apparmor-d;
   cfg = config.security.apparmor-d;
   allProfiles = mapAttrsToList (n: v: n) (filterAttrs (n: v: v == "regular")
     (readDir "${apparmor-d}/etc/apparmor.d"));
+  profileActionType = types.enum [ "disable" "complain" "enforce" ];
 in
 {
   options.security.apparmor-d = {
     enable = mkEnableOption "Enables apparmor.d support";
-    enableAllProfiles = mkEnableOption ''
-      Enables all of the profiles in apparmor.d
-    '';
-    enforceAllProfiles = mkEnableOption ''
-      Enforces all of the profiles in apparmor.d
-    '';
+
+    allProfiles = mkOption {
+      type = profileActionType;
+      default = "disable";
+      description = ''
+        Can be set to "enforce" or "complain" to enable all profiles and set their flags to enforce or complain respectively
+      '';
+    };
 
     profiles = mkOption {
-      type = types.attrsOf (types.enum [ "disable" "complain" "enforce" ]);
+      type = types.attrsOf profileActionType;
       default = { };
-      description = "set of apparmor profiles to include from apparmor.d";
+      description = "Set of apparmor profiles to include from apparmor.d";
     };
   };
 
@@ -30,19 +34,18 @@ in
     security.apparmor = {
       packages = [ apparmor-d ];
       policies =
-        if cfg.enableAllProfiles then
+        if (cfg.allProfiles != "disable") then
           (genAttrs allProfiles (name: {
             enable =
               if (hasAttr name cfg.profiles) then
                 (cfg.profiles.${name} != "disable")
               else
                 true;
-            enforce =
-              if (hasAttr name cfg.profiles) then
-                (cfg.profiles.${name} == "enforce")
-              else
-                cfg.enforceAllProfiles;
-            # profile = readFile "${apparmor-d}/etc/apparmor.d/${n}";
+            enforce = (if (hasAttr name cfg.profiles) then
+              cfg.profiles.${name}
+            else
+              cfg.allProfiles) == "enforce";
+            # profile = readFile "${apparmor-d}/etc/apparmor.d/${name}";
             profile = ''include "${apparmor-d}/etc/apparmor.d/${name}"'';
           }))
         else
@@ -65,7 +68,7 @@ in
       '';
     };
     specialisation.disabledApparmorD.configuration = {
-      security.apparmor-d.enable = false;
+      security.apparmor-d.enable = mkForce false;
       system.nixos.tags = [ "without-apparmor.d" ];
     };
   };

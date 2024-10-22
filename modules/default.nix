@@ -35,6 +35,6 @@ in
     assertion = config.lonsdaleite.trustedUser == null
       || config.users.users."${config.lonsdaleite.trustedUser}".isNormalUser;
     message =
-      "config.lonsdaleite.trustedUser must be either null or normalUser";
+      "`config.lonsdaleite.trustedUser' must be either null or normalUser";
   }];
 }

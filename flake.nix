@@ -26,7 +26,9 @@
 
   inputs = {
     # use stable channel by default
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    # TODO: switch back to stable after testing apparmor-d
+    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     # TODO: does flake-parts enable lazy evaluation of flake inputs?
     # i don't like trashing projects full with deps
     impermanence.url = "github:nix-community/impermanence";
@@ -48,6 +50,6 @@
       nixosModules = flake-lib.mkModule;
       nixosConfigurations = flake-lib.mkHosts "x86_64-linux";
       checks = flake-lib.mkChecks "x86_64-linux";
-      # packages = flake-lib.mkPkgs "x86_64-linux";
+      packages = flake-lib.mkPkgs "x86_64-linux";
     };
 }

@@ -7,11 +7,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1729444281,
-        "narHash": "sha256-4llllYR1kfhkAIJOYUz9hUExt5cC+JwuSpQM8Pj1ZL8=",
+        "lastModified": 1729617696,
+        "narHash": "sha256-c65y2s0hNvkkSGEq7l13ix03lkddpIMhwr9VXKIODa0=",
         "owner": "omega-800",
         "repo": "apparmor.d",
-        "rev": "7f58c2b4ba846ce4b1195e086d2361a1beeae577",
+        "rev": "8889cdced9a43fe696478d596cd13c3e9adf7438",
         "type": "github"
       },
       "original": {
@@ -37,16 +37,16 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1728193676,
-        "narHash": "sha256-PbDWAIjKJdlVg+qQRhzdSor04bAPApDqIv2DofTyynk=",
+        "lastModified": 1729256560,
+        "narHash": "sha256-/uilDXvCIEs3C9l73JTACm4quuHUsIHcns1c+cHUJwA=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "ecbc1ca8ffd6aea8372ad16be9ebbb39889e55b6",
+        "rev": "4c2fcb090b1f3e5b47eaa7bd33913b574a11e0a0",
         "type": "github"
       },
       "original": {
         "owner": "NixOS",
-        "ref": "nixos-24.05",
+        "ref": "nixos-unstable",
         "repo": "nixpkgs",
         "type": "github"
       }

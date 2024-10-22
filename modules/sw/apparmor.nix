@@ -4,7 +4,6 @@ let
   inherit (lib) mkIf concatMapAttrs;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs mkEtcPersist;
   inherit (builtins) match elemAt readDir readFile;
-  inherit (self.inputs.apparmor-d.packages.${pkgs.system}) apparmor-d;
 in
 {
   imports = [ ./apparmor-d-module.nix ];
@@ -43,21 +42,41 @@ in
         killUnconfinedConfinables = true;
         # packages = [ apparmor-d ];
         # includes = readFilesRec "${apparmor-d}/etc/apparmor.d";
-        # policies = {
-        #   test = {
-        #     enable = true;
-        #     enforce = false;
-        #     profile = ''
-        #       ${pkgs.vim}/bin/vim {
-        #
-        #       }
-        #     '';
-        #   };
-        # };
+        policies = {
+          test = {
+            enable = false;
+            enforce = false;
+            profile = ''
+              # apparmor.d - Full set of apparmor profiles
+              # Copyright (C) 2019-2021 Mikhail Morfikov
+              # Copyright (C) 2021-2024 Alexandre Pujol <alexandre@pujol.io>
+              # SPDX-License-Identifier: GPL-2.0-only
+
+              abi <abi/4.0>,
+
+              include <tunables/global>
+
+              # @{exec_path} = /usr/sbin/whoami
+              @{exec_path} = {/run/current-system/sw/{bin,libexec},/{,usr/}{,s}bin}/whoami
+              profile whoami /{run/current-system/sw/{bin,libexec},{,usr/}{,s}bin}/whoami flags=(attach_disconnected,complain) {
+                include <abstractions/base>
+                include <abstractions/consoles>
+                include <abstractions/nameservice-strict>
+
+                /{run/current-system/sw/{bin,libexec},{,usr/}{,s}bin}/whoami mr,
+
+                include if exists <local/whoami>
+              }
+
+              # vim:syntax=apparmor
+            '';
+          };
+        };
       };
     security.apparmor-d = {
       enable = true;
-      enableAllProfiles = true;
+      allProfiles = "complain";
+      # profiles = { ps = "enforce"; };
     };
   };
 }
