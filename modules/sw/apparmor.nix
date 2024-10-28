@@ -6,7 +6,7 @@ let
   inherit (builtins) match elemAt readDir readFile;
 in
 {
-  imports = [ ./apparmor-d-module.nix ];
+  imports = [ ./apparmor-d-module.nix ./test.nix ];
 
   # https://gitlab.com/apparmor/apparmor
   # https://github.com/roddhjav/apparmor.d
@@ -75,8 +75,7 @@ in
       };
     security.apparmor-d = {
       enable = true;
-      allProfiles = "complain";
-      # profiles = { ps = "enforce"; };
+      statusAll = "complain";
     };
   };
 }

@@ -7,7 +7,7 @@
     decapitated = false;
     os = {
       enable = false;
-      # privilege.enable = true;
+      privilege.enable = true;
       # random.enable = true;
       # pam.enable = true;
       # tty.enable = true;
