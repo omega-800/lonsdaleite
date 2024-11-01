@@ -11,6 +11,10 @@ in
 rec {
   inherit const;
 
+  mkDisableOption = description: mkEnableDef true description;
+
+  boolToInt = b: if b then "1" else "0";
+
   paranoiaType = ints.between 0 2;
 
   mkHighDefault = val: lib.mkOverride 900 val;

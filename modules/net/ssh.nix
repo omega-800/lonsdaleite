@@ -6,6 +6,7 @@ let
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEtcPersist mkPersistDirs;
 in
 {
+  # TODO: change openssl to https://www.libressl.org/
   options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")
     // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
     allow-hosts = mkOption {

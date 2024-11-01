@@ -3,12 +3,15 @@ let
   cfg = config.lonsdaleite.os.systemd;
   inherit (lib) mkIf mkMerge;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
+  # TODO: difference between boot.initrd.systemd.services and systemd.services?
 in
 {
   # https://documentation.suse.com/smart/security/html/systemd-securing/index.html
   # https://github.com/alegrey91/systemd-service-hardening
   # https://gist.github.com/joachifm/022ca74fd447bd8bb2f80a133c0ab3a9
+  # https://madaidans-insecurities.github.io/guides/linux-hardening.html#systemd-service-sandboxing
   # TODO: research
+  # man systemd.exec
   options.lonsdaleite.os.systemd = (mkEnableFrom [ "os" ] "Hardens systemd")
     // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // { };
 

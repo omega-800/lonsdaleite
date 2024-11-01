@@ -42,6 +42,9 @@
   ## https://github.com/Kicksecure/security-misc/issues/271
   virt = { "1" = [ "snd_intel8x0" "tls" "virtio_balloon" "virtio_console" ]; };
 
+  # blacklist the microphone module; however, this can differ from system to system. To find the name of the module, look in /proc/asound/modules and blacklist it. 
+  sound = { "1" = [ "snd_hda_intel" ]; };
+
   ## Ubuntu:
   ## Already disabled modules have been omitted.
   ##
@@ -53,6 +56,7 @@
       "amd76x_edac"
       "ath_pci"
       "evbug"
+      #TODO: enable if not headless?
       "pcspkr"
       "snd_aw2"
       "snd_intel8x0m"
@@ -93,7 +97,7 @@
   bluetooth = {
     "1" = [
       "bluetooth"
-      "bluetooth_6lowpan "
+      "bluetooth_6lowpan"
       "bt3c_cs"
       "btbcm"
       "btintel"
@@ -208,6 +212,7 @@
       # I dare you to look up the story on reiserfs, it's wild
       "reiserfs"
       "udf"
+      "squashfs"
     ];
   };
 
@@ -265,6 +270,7 @@
       "psnap"
       "rose"
       "x25"
+      "llc"
     ];
   };
   ##
@@ -383,7 +389,7 @@
   ## USB Video Device Class:
   ## Disables the USB-based video streaming driver for devices like some webcams and digital camcorders.
   ##
-  vvcvideo = { "2" = [ "uvcvideo" ]; };
+  uvcvideo = { "2" = [ "uvcvideo" ]; };
 
   ## Vivid:
   ## Disables the vivid kernel module since it has been the cause of multiple vulnerabilities.

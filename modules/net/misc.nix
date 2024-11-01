@@ -5,6 +5,7 @@ let
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in
 {
+  # Do not put anything uniquely identifying in your hostname or username. It is recommended to keep them as generic names such as "host" and "user" so you can't be identified by them. 
   options.lonsdaleite.net.misc =
     (mkEnableFrom [ "net" ] "Hardens random network related things")
     // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
@@ -13,6 +14,7 @@ in
     networking = {
       wireless.enable = false;
       enableIPv6 = cfg.paranoia != 2;
+      tempAddresses = "default";
       # Use networkd instead of the pile of shell scripts
       useNetworkd = true;
       dhcpcd.enable = false;
@@ -40,9 +42,14 @@ in
         # This also prevents failures of services that are restarted instead of stopped.
         # It will use `systemctl restart` rather than stopping it with `systemctl stop`
         # followed by a delayed `systemctl start`.
-        systemd-networkd.stopIfChanged = false;
+        systemd-networkd = {
+          stopIfChanged = false;
+          serviceConfig = { IPv6PrivacyExtensions = "kernel"; };
+        };
         # Services that are only restarted might be not able to resolve when resolved is stopped before
         systemd-resolved.stopIfChanged = false;
+        # TODO: if wifi disable
+        systemd-rfkill = { enable = true; };
       };
       network = {
         wait-online.enable = false;

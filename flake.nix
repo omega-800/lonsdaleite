@@ -14,6 +14,7 @@
   # https://github.com/redcode-labs/RedNixOS
   # https://github.com/qbit/xin
   # https://github.com/Mic92/dotfiles
+  # https://mayflower.de/
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html

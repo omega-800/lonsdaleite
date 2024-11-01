@@ -1,2 +1,6 @@
-# TODO: https://grsecurity.net/
-# https://en.wikibooks.org/wiki/Grsecurity/Appendix/Grsecurity_and_PaX_Configuration_Options#Configuration_Method
+{
+  #TODO: research kernel patches
+  # https://forums.gentoo.org/viewtopic-t-1084150-start-0.html
+  # ITS BACCCCCC
+  # https://github.com/edera-dev/linux-openpax
+}

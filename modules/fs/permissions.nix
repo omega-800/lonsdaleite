@@ -23,11 +23,6 @@ in
   };
 
   config = mkIf cfg.enable {
-    users.groups.proc = { };
-    systemd.services = {
-      systemd-logind.serviceConfig.SupplementaryGroups = [ "proc" ];
-      "user@".serviceConfig.SupplementaryGroups = [ "proc" ];
-    };
     systemd.tmpfiles.settings = {
       # Restrict permissions of /home/$USER so that only the owner of the
       # directory can access it (the user). systemd-tmpfiles also has the benefit
@@ -56,14 +51,20 @@ in
       "/root" = {
         device = mkDefault "/root";
         options = [ "nodev" "nouser" ]
-          ++ (if cfg.root.paranoia == 2 then [ "noexec" ] else [ "exec" ])
-          ++ (if cfg.root.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+          ++ (if cfg.root.paranoia == 2 then [ ] else [ ])
+          ++ (if cfg.root.paranoia >= 1 then [
+          "noexec"
+          "bind"
+          "nosuid"
+        ] else
+          [ ]);
       };
       "/tmp" = {
         device = "/tmp";
         options = [
           "nouser"
           "nodev"
+          "noexec"
           "noatime"
           "usrquota"
           "grpquota"
@@ -213,6 +214,7 @@ in
           "size=${config.boot.devSize}"
         ];
       };
+      # /proc is a pseudo-filesystem that contains information about all processes currently running on the system. By default, this is accessible to all users, which can allow an attacker to spy on other processes. 
       "/proc" = {
         fsType = "proc";
         device = "proc";
@@ -222,10 +224,17 @@ in
           "nosuid"
           "nouser"
           "noatime"
+          # To permit users to only see their own processes and not those of other users
           "hidepid=${if cfg.proc.paranoia == 2 then "4" else "2"}"
           "gid=proc"
         ];
       };
     };
+    # systemd-logind still needs to see other users' processes, so this is needed for user sessions to work correctly on a systemd system
+    systemd.services = {
+      systemd-logind.serviceConfig.SupplementaryGroups = [ "proc" ];
+      "user@".serviceConfig.SupplementaryGroups = [ "proc" ];
+    };
+    users.groups.proc = { };
   };
 }

@@ -27,7 +27,7 @@ rec {
         in nameValuePair name (nixosTest ({
           inherit name;
           nodes.test = { ... }: {
-            imports = [ self.nixosModules.lonsdaleite ../examples/test.nix ];
+            imports = [ self.nixosModules.lonsdaleite ../hosts/test.nix ];
           };
         } // (import ../checks/${n})))) ../checks;
   };
@@ -38,8 +38,8 @@ rec {
         let name = mkName n;
         in nameValuePair name (self.inputs.nixpkgs.lib.nixosSystem {
           inherit system;
-          modules = [ self.nixosModules.lonsdaleite ../examples/${n} ];
-        })) ../examples;
+          modules = [ self.nixosModules.lonsdaleite ../hosts/${n} ];
+        })) ../hosts;
 
   mkPkgs = system: {
     "${system}" = mapDirs

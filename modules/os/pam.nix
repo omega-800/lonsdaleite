@@ -60,6 +60,7 @@ in
       makeHomeDir.umask = "0077";
       #TODO: loosen these up a bit
       loginLimits = [
+        # disable coredumps
         {
           domain = "*";
           item = "core";
@@ -139,6 +140,7 @@ in
                 # Increase hashing rounds for /etc/shadow; this doesn't automatically
                 # rehash your passwords, you'll need to set passwords for your accounts
                 # again for this to work.
+                # By default shadow uses 5000 rounds. The more rounds it does the slower it will be to login.
                 sha512 = true;
                 shadow = true;
                 rounds = 65536;
@@ -194,6 +196,7 @@ in
           common-account.text = "\n";
           common-password.text = "\n";
           # TODO: pam_tally2
+          # auth required pam_tally2.so deny=3 unlock_time=600 onerr=succeed file=/var/log/tallylog 
           # TODO: filter these
           # https://www.debian.org/doc/manuals/securing-debian-manual/ch04s11.en.html
           common-session.text = ''

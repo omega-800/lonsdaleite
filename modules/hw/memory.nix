@@ -5,6 +5,7 @@ let
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in
 {
+  # https://madaidans-insecurities.github.io/guides/linux-hardening.html#hardened-malloc
   options.lonsdaleite.hw.memory = (mkEnableFrom [ "hw" ] "Hardens memory")
     // (mkParanoiaFrom [ "hw" ] [ "" "" "" ]) // { };
 
