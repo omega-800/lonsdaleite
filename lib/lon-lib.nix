@@ -11,31 +11,31 @@ in
 rec {
   inherit const;
 
-  mkDisableOption = description: mkEnableDef true description;
-
-  boolToInt = b: if b then "1" else "0";
+  boolToIntStr = b: if b then "1" else "0";
 
   paranoiaType = ints.between 0 2;
 
   mkHighDefault = val: lib.mkOverride 900 val;
   mkHigherDefault = val: lib.mkOverride 800 val;
+  mkLowerForce = val: lib.mkOverride 200 val;
+  mkLowForce = val: lib.mkOverride 100 val;
 
   userByName = name:
     findFirst (u: u.name == name) null
       (mapAttrsToList (n: v: v) config.users.users);
 
+  mkDisableOption = description: mkEnableDef true description;
   mkEnableDef = default: description:
     mkOption {
       inherit default description;
       type = bool;
     };
-
   mkEnableFrom = path: description: {
     enable = mkEnableDef (attrByPath (path ++ [ "enable" ]) false rootConfig)
-      (description
-        + "Defaults to: config.lonsdaleite.${concatStringsSep "." path}enable");
+      (description + "Defaults to: `config.lonsdaleite.${
+          concatStringsSep "." path
+        }.enable'");
   };
-
   mkParanoiaOptionWithInfo = descriptions: default: info: {
     paranoia = mkOption {
       inherit default;
@@ -47,6 +47,7 @@ rec {
         ${info}
       '';
       type = paranoiaType;
+      example = 2;
     };
   };
 

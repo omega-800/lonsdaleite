@@ -10,6 +10,7 @@ in
     (mkEnableFrom [ "os" ] "Enables privileged access for normal users") // {
       use-sudo = mkEnableOption "Uses sudo instead of doas";
       disable = mkEnableDef (!cfg.enable) "Disables sudo/doas completely";
+      lock-root = mkEnableOption "Lock root user";
     };
 
   config = mkMerge [
@@ -40,6 +41,7 @@ in
     # defaults should be more minimalistic in NixOS imho
     (mkIf cfg.disable { security.sudo.enable = false; })
     {
+      users.users = mkIf cfg.lock-root { root.hashedPassword = "!"; };
       assertions = [{
         assertion = !(cfg.enable && cfg.disable);
         message = ''

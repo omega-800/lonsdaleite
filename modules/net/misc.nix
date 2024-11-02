@@ -13,8 +13,10 @@ in
   config = mkIf cfg.enable {
     networking = {
       wireless.enable = false;
+      # TODO: gather all ipv6 configs
       enableIPv6 = cfg.paranoia != 2;
-      tempAddresses = "default";
+      # is already default
+      # tempAddresses = if config.networking.enableIPv6 then "default" else "disabled";
       # Use networkd instead of the pile of shell scripts
       useNetworkd = true;
       dhcpcd.enable = false;

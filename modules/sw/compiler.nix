@@ -2,9 +2,17 @@
   # nixpkgs/doc/stdenv/stdenv.chapter.md
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#hardened-compilation-flags
   nixpkgs.hostPlatform = {
-    # TODO: https://blog.mayflower.de/5800-Hardening-Compiler-Flags-for-NixOS.html
+    # https://blog.mayflower.de/5800-Hardening-Compiler-Flags-for-NixOS.html
+    # 
     # https://github.com/NixOS/nixpkgs/pull/12895
     # https://hydra.mayflower.de/
+
+    # https://madaidans-insecurities.github.io/guides/linux-hardening.html#hardened-compilation-flags
+    #TODO: -flto -fvisibility=hidden -fsanitize=cfi -fsanitize=shadow-call-stack -fsanitize=safe-stack -fsanitize=signed-integer-overflow,unsigned-integer-overflow -fsanitize-trap=signed-integer-overflow,unsigned-integer-overflow -fstack-clash-protection
+
+    # gcc: -ftrivial-auto-var-init=zero 
+    # clang: -ftrivial-auto-var-init=zero -enable-trivial-auto-var-init-zero-knowing-it-will-be-removed-from-clang
+
     inherit (pkgs) system;
     # TODO: use musl instead of glibc
     # https://cyberchaos.dev/cyberchaoscreatures/musl-nixos/-/blob/main/nixos-fixes.nix?ref_type=heads

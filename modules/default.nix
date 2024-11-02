@@ -1,11 +1,20 @@
-{ lib, lon-lib, config, ... }:
+{ modulesPath, lib, lon-lib, config, ... }:
 let
   inherit (lib) mkEnableOption mkOption mapAttrsToList filterAttrs;
   inherit (lib.types) enum nullOr nonEmptyStr listOf;
   inherit (lon-lib) mkParanoiaOptionDef mkDisableOption mkImport;
 in
 {
-  imports = [ ./fs ./hw ./net ./os ./sw ];
+  imports = [
+    ./fs
+    ./hw
+    ./net
+    ./os
+    ./sw
+    # TODO: disable some of these if not needed
+    # also remove dupes
+    "${modulesPath}/profiles/hardened.nix"
+  ];
 
   options.lonsdaleite =
     let
@@ -13,7 +22,9 @@ in
         (filterAttrs (n: v: v.isNormalUser) config.users.users);
     in
     {
-      enable = mkEnableOption "Enables lonsdaleite";
+      enable = mkEnableOption ''
+        Enables lonsdaleite. Enjoy the false sense of security.
+      '';
       trustedUser = mkOption {
         type = nullOr nonEmptyStr;
         # causes infinite recursion when trying to use this config to mutate the users attrs
@@ -24,9 +35,11 @@ in
       };
       decapitated = mkDisableOption ''
         If the host will be running in "headless" mode, eg. a server. If you are expecting your gui to work, don't enable this option. If you are a tui-only gigachad then enjoy the extra security by enabling it.'';
+      # TODO: implement
       priorities = mkOption {
         type = listOf (enum [ "performance" "security" "privacy" "auditing" ]);
         default = [ "privacy" "security" ];
+        example = [ "performance" "auditing" ];
       };
     } // (mkParanoiaOptionDef [
       "You still want your machine to be usable"

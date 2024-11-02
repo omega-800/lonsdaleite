@@ -35,6 +35,7 @@ in
     # https://pastebin.com/fi6VBm2z
     systemd = mkMerge [
       {
+        # TODO: gather coredump cfgs from sysctl, pam, systemd
         coredump = {
           enable = false;
           extraConfig = "Storage=none";

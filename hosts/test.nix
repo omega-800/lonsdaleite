@@ -1,5 +1,6 @@
 { modulesPath, lib, pkgs, ... }: {
   imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
+
   lonsdaleite = {
     enable = false;
     paranoia = 2;
@@ -7,9 +8,9 @@
     decapitated = false;
     os = {
       enable = false;
-      privilege.enable = true;
+      # privilege.enable = true;
       random.enable = true;
-      pam.enable = true;
+      # pam.enable = true;
       tty.enable = true;
       antivirus.enable = true;
       systemd.enable = true;
@@ -25,8 +26,12 @@
       networkmanager.enable = true;
       misc.enable = true;
     };
-    sw = { apparmor.enable = true; };
-    # hw = { kernel.enable = true; };
+    # sw = { apparmor.enable = true; };
+    hw = {
+      enable = false;
+      # kernel.enable = true;
+      modules.enable = true;
+    };
   };
   users.users = {
     alice = {

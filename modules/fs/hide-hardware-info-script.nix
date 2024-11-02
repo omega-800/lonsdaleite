@@ -1,9 +1,9 @@
 # https://raw.githubusercontent.com/Kicksecure/security-misc/71c58442ca6d57cd95b72a76ed87f8c248cdbd98/usr/libexec/security-misc/hide-hardware-info
 { pkgs, ... }:
 let
-  chgrp = "${pkgs.busybox}/bin/chgrp";
-  chmod = "${pkgs.busybox}/bin/chmod";
-  grep = "${pkgs.busybox}/bin/grep";
+  chgrp = "${pkgs.toybox}/bin/chgrp";
+  chmod = "${pkgs.toybox}/bin/chmod";
+  grep = "${pkgs.toybox}/bin/grep";
   bash = "${pkgs.bash}/bin/bash";
 in
 pkgs.writeShellScriptBin "hide-hardware-info" # bash

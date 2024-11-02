@@ -13,7 +13,13 @@ in
     # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sec-Disallowing_Root_Access
     boot.initrd.systemd.users.root.shell = "${pkgs.shadow}/bin/nologin";
     users.users = mkMerge [
-      { root.shell = "${pkgs.shadow}/bin/nologin"; }
+      {
+        root = {
+          shell = "${pkgs.shadow}/bin/nologin";
+          ignoreShellProgramCheck = true;
+        };
+      }
+
       (mkIf (usr != null) { "${usr}".uid = 1000; })
     ];
     # man 5 login.defs

@@ -13,7 +13,7 @@
     # security.chromiumSuidSandbox.enable = true;
     # TODO: disable services which are enabled by default
     # let lib = (import <nixpkgs> {}).lib; in lib.mapAttrs (n: v: n) (lib.filterAttrs (n: v: (lib.hasAttr "enable" v) && (lib.hasAttr "default" v.enable) && (v.enable.default == true)) nixosConfigurations.nixie.options.services)
-    # { graphical-desktop = "graphical-desktop"; libinput = "libinput"; logrotate = "logrotate"; lvm = "lvm"; nscd = "nscd"; timesyncd = "timesyncd"; udev = "udev"; }
+    # { graphical-desktop = "graphical-desktop"; libinput = "libinput"; logrotate = "logrotate"; lvm = "lvm"; nscd = "nscd"; udev = "udev"; }
 
   };
 }

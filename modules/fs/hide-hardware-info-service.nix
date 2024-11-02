@@ -2,7 +2,7 @@
 let
   cfg = config.lonsdaleite.fs.hideHardwareInfo;
   inherit (lib) mkEnableOption mkIf;
-  inherit (lon-lib) mkEnableFrom mkDisableOption boolToInt;
+  inherit (lon-lib) mkEnableFrom mkDisableOption boolToIntStr;
   usr = config.lonsdaleite.trustedUser;
 in
 {
@@ -31,17 +31,17 @@ in
       ## See the file COPYING for copying conditions.
 
       ## Disable the /sys whitelist.
-      sysfs_whitelist=${boolToInt cfg.sysfsWhitelist}
+      sysfs_whitelist=${boolToIntStr cfg.sysfsWhitelist}
 
       ## Disable the /proc/cpuinfo whitelist.
-      cpuinfo_whitelist=${boolToInt cfg.cpuinfoWhitelist}
+      cpuinfo_whitelist=${boolToIntStr cfg.cpuinfoWhitelist}
 
       ## Disable /sys hardening.
-      sysfs=${boolToInt cfg.hardenSysfs}
+      sysfs=${boolToIntStr cfg.hardenSysfs}
 
       ## Disable selinux mode.
       ## https://www.whonix.org/wiki/Security-misc#selinux
-      selinux=${boolToInt cfg.selinuxMode}
+      selinux=${boolToIntStr cfg.selinuxMode}
     '';
     systemd.services = {
       # https://madaidans-insecurities.github.io/guides/linux-hardening.html#restricting-sysfs

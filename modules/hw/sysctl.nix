@@ -1,12 +1,14 @@
-{ lib, ... }:
+{ lib, lon-lib, ... }:
 let
   cfg = {
     enable = false;
     TODO = "implement/merge with kernel";
   };
+  inherit (lib) mkIf;
+  inherit (lon-lib) mkLowerForce;
 in
 {
-  config = lib.mkIf cfg.enable {
+  config = mkIf cfg.enable {
     boot.kernel.sysctl = {
       # TODO: attribute sources
       # https://theprivacyguide1.github.io/linux_hardening_guide
@@ -18,7 +20,8 @@ in
       # of many privilege escalation vulnerabilities, but can cause breakage.
       # This may break some sandboxing programs such as bubblewrap. These can 
       # be fixed by making the sandbox binaries setuid. 
-      "kernel.unprivileged_userns_clone" = "0";
+      # already set by nixpkgs/nixos/modules/profiles/hardened.nix
+      # "kernel.unprivileged_userns_clone" = "0";
       # You can alternatively disable user namespaces completely (including for 
       # root) by setting 
       # "user.max_user_namespaces" = "0";
@@ -43,15 +46,28 @@ in
       "net.ipv6.conf.default.forwarding" = "0";
 
       # This disables kexec which can be used to replace the running kernel. 
-      "kernel.kexec_load_disabled" = "1";
+      # nixpkgs hardened profile sets this already through 
+      # security.protectKernelImage
+      # "kernel.kexec_load_disabled" = "1";
+
       # This makes it so that only root can use the BPF JIT compiler and to 
       # harden it. A JIT compiler opens up the possibility for an attacker to 
       # exploit many vulnerabilities such as JIT spraying. 
       "kernel.unprivileged_bpf_disabled" = "1";
       "net.core.bpf_jit_harden" = "2";
+      # nixpkgs hardened profile sets this already
+      # "net.core.bpf_jit_enable" = false;
+
       # This setting attempts to prevent any kernel pointer leaks via various 
-      # methods (such as in /proc/kallsyms or dmesg).
-      "kernel.kptr_restrict" = if cfg.paranoia == 0 then "1" else "2";
+      # methods (such as in /proc/kallsyms or dmesg). nixpkgs hardened profile
+      # sets this to 2
+      # 1 = users with CAP_SYSLOG, 2 = nobody can see them
+      "kernel.kptr_restrict" =
+        mkLowerForce (if cfg.paranoia == 0 then "1" else "2");
+
+      # Disables ftrace debugging. nixpkgs hardened profile sets this already
+      # "kernel.ftrace_enabled" = false;
+
       # This blocks users other than root from being able to see the kernel 
       # logs. 
 
@@ -61,18 +77,23 @@ in
       # information leaks. 
       "kernel.printk" = "3 3 3 3";
 
+      # TCP timestamps also leak the system time. The kernel attempted to fix this by using a random offset for each connection, but this is not enough to fix the issue. Thus, TCP timestamps should be disabled. This can be done by setting the following with sysctl:
+      "net.ipv4.tcp_timestamps" = if cfg.paranoia == 2 then "0" else "1";
+
       # These disable ICMP redirect acceptance. If these settings are not set 
       # then an attacker can redirect an ICMP request to anywhere they want. 
-      # (man-in-the-middle attacks)
-      "net.ipv6.conf.all.accept_redirects" = "0";
-      "net.ipv6.conf.default.accept_redirects" = "0";
-      "net.ipv4.conf.all.accept_redirects" = "0";
-      "net.ipv4.conf.default.accept_redirects" = "0";
-      "net.ipv4.conf.all.secure_redirects" = "0";
-      "net.ipv4.conf.default.secure_redirects" = "0";
+      # (man-in-the-middle attacks). nixpkgs hardened profile sets this already
+      # "net.ipv6.conf.all.accept_redirects" = "0";
+      # "net.ipv6.conf.default.accept_redirects" = "0";
+      # "net.ipv4.conf.all.accept_redirects" = "0";
+      # "net.ipv4.conf.default.accept_redirects" = "0";
+      # "net.ipv4.conf.all.secure_redirects" = "0";
+      # "net.ipv4.conf.default.secure_redirects" = "0";
+
       # These disable ICMP redirect sending when on a non-router. 
-      "net.ipv4.conf.all.send_redirects" = "0";
-      "net.ipv4.conf.default.send_redirects" = "0";
+      # nixpkgs hardened profile sets this already
+      # "net.ipv4.conf.all.send_redirects" = "0";
+      # "net.ipv4.conf.default.send_redirects" = "0";
 
       # Ignore all ICMP requests to avoid smurf attacks, make the device more 
       # difficult to enumerate on the network and prevent clock fingerprinting 
@@ -87,11 +108,13 @@ in
       "net.ipv4.conf.default.accept_source_route" = "0";
       "net.ipv6.conf.all.accept_source_route" = "0";
       "net.ipv6.conf.default.accept_source_route" = "0";
+
       # These enable source validation of packets received from all interfaces 
       # of the machine. This protects against IP spoofing methods in which an 
       # attacker can send a packet with a fake IP address. 
-      "net.ipv4.conf.all.rp_filter" = "1";
-      "net.ipv4.conf.default.rp_filter" = "1";
+      # nixpkgs hardened profile sets this already
+      # "net.ipv4.conf.default.rp_filter" = "1";
+      # "net.ipv4.conf.all.rp_filter" = "1";
 
       # This helps protect against SYN flood attacks which is a form of denial 
       # of service attack where an attacker sends a lot of SYN requests in an 
@@ -113,9 +136,9 @@ in
 
       # log packets with impossible addresses to kernel log
       # No active security benefit, just makes it easier to spot a DDOS/DOS by 
-      # giving extra logs
-      "net.ipv4.conf.default.log_martians" = "1";
-      "net.ipv4.conf.all.log_martians" = "1";
+      # giving extra logs. nixpkgs hardened profile sets this already
+      # "net.ipv4.conf.all.log_martians" = "1";
+      # "net.ipv4.conf.default.log_martians" = "1";
 
       # disable sending and receiving of shared media redirects
       # this setting overwrites net.ipv4.conf.all.secure_redirects
@@ -139,7 +162,8 @@ in
       "net.ipv4.conf.all.drop_gratuitous_arp" = "1";
 
       # ignore all ICMP echo and timestamp requests sent to broadcast/multicast
-      "net.ipv4.icmp_echo_ignore_broadcasts" = "1";
+      # nixpkgs hardened profile sets this already
+      # "net.ipv4.icmp_echo_ignore_broadcasts" = "1";
 
       # number of Router Solicitations to send until assuming no routers are present
       "net.ipv6.conf.default.router_solicitations" = "0";
@@ -218,6 +242,8 @@ in
       "kernel.core_pattern" = "|/bin/false";
       # Process that run with elevated privileges (setuid) may still dump their memory even after these settings. To prevent them from doing this:
       "fs.suid_dumpable" = "0";
+      # Similar to core dumps, swapping or paging copies parts of memory to disk, which can contain sensitive information. The kernel should be configured to only swap if absolutely necessary with this sysctl:
+      "vm.swappiness" = "1";
 
       # This restricts loading TTY line disciplines to the CAP_SYS_MODULE 
       # capability to prevent unprivileged attackers from loading vulnerable 
@@ -254,7 +280,6 @@ in
 
       # Network
       "net.core.default_qdisc" = "fq";
-      "net.core.bpf_jit_enable" = false;
       "net.core.netdev_max_backlog" = "250000";
       "net.ipv4.tcp_congestion_control" = "bbr";
       "net.ipv4.tcp_synack_retries" = "5";
@@ -272,7 +297,6 @@ in
       "net.ipv6.conf.lo.disable_ipv6" = "0";
 
       # Kernel
-      "kernel.ftrace_enabled" = false;
       "kernel.core_uses_pid" = "1";
       "kernel.pid_max" = "32768";
       "kernel.panic" = "20";
@@ -281,8 +305,6 @@ in
       "fs.file-max" = "9223372036854775807";
       "fs.inotify.max_user_watches" = "524288";
 
-      "net.ipv4.tcp_timestamps" = if cfg.paranoia == 2 then "0" else "1";
-      "kernel.deny_new_usb" = "1";
       "net.ipv4.icmp_ignore_bogus_error_responses" = "1";
     };
   };

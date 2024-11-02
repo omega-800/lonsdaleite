@@ -5,6 +5,8 @@ let
   inherit (lon-lib) mkEnableFrom mkParanoiaOption mkParanoiaFrom;
 in
 {
+  # TODO: https://www.kicksecure.com/wiki/SUID_Disabler_and_Permission_Hardener
+  # https://madaidans-insecurities.github.io/guides/linux-hardening.html#file-permissions
   options.lonsdaleite.fs.permissions = (mkEnableFrom [ "fs" ] ''
     Sets hardened filesystem permissions. 
     [Partitioning guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664)
@@ -39,6 +41,12 @@ in
         user = "root";
         group = "root";
       };
+
+      # A few more examples are /boot, /usr/src and /{,usr/}lib/modules — these contain the kernel image, System.map and various other files, all of which can leak sensitive information about the kernel.
+      "restrictusrsrc"."/usr/src/*".Z.mode = "0700";
+      "restrictusrlibmodules"."/usr/lib/modules/*".Z.mode = "0700";
+      "restrictlibmodules"."/lib/modules/*".Z.mode = "0700";
+
     };
 
     fileSystems = {

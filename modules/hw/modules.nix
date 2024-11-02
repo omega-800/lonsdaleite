@@ -56,13 +56,10 @@
       "amd76x_edac"
       "ath_pci"
       "evbug"
-      #TODO: enable if not headless?
       "pcspkr"
       "snd_aw2"
       "snd_intel8x0m"
       "snd_pcsp"
-      "usbkbd"
-      "usbmouse"
     ];
   };
 
@@ -111,7 +108,6 @@
       "btrsi"
       "btrtl"
       "btsdio"
-      "btusb"
       "virtio_bt"
     ];
   };
@@ -203,12 +199,10 @@
   ##
   fs = {
     "0" = [
-      "cramfs"
-      "freevxfs"
-      "hfs"
+      # already disabled by nixpkgs/nixos/modules/profiles/hardened.nix
+      # "cramfs" "freevxfs" "hfs" "jfs" "adfs" "affs" "bfs" "befs" "efs" "erofs" "exofs" "f2fs" "hpfs" "minix" "nilfs2" "ntfs" "omfs" "qnx4" "qnx6" "sysv" "ufs"
       "hfsplus"
       "jffs2"
-      "jfs"
       # I dare you to look up the story on reiserfs, it's wild
       "reiserfs"
       "udf"
@@ -254,21 +248,20 @@
   protocols = {
     "2" = [ "brcm80211" ];
     "0" = [
+      # already disabled by nixpkgs/nixos/modules/profiles/hardened.nix
+      # "ax25" "netrom" "rose"
       "af_802154"
       "appletalk"
-      "ax25"
       "decnet"
       "dccp"
       "econet"
-      "eepro100"
+      "eepro100" # replaced by e100
       "eth1394"
       "ipx"
       "n-hdlc"
-      "netrom"
       "p8022"
       "p8023"
       "psnap"
-      "rose"
       "x25"
       "llc"
     ];
@@ -399,30 +392,6 @@
   ## https://github.com/a13xp0p0v/kconfig-hardened-check/commit/981bd163fa19fccbc5ce5d4182e639d67e484475
   ##
   vivid = { "0" = [ "vivid" ]; };
-
-  # TODO: figure out source 
-  # Old or rare or insufficiently audited filesystems
-  legacyfs = {
-    "0" = [
-      "adfs"
-      "affs"
-      "bfs"
-      "befs"
-      "efs"
-      "erofs"
-      "exofs"
-      "f2fs"
-      "hpfs"
-      "minix"
-      "nilfs2"
-      "omfs"
-      "qnx4"
-      "qnx6"
-      "sysv"
-      "ufs"
-    ];
-    "1" = [ "ntfs" ];
-  };
 
   # SOURCE: nixosConfiguration.options.boot.blacklistedKernelModules.default
   def."0" = [ "i2c_piix4" ];

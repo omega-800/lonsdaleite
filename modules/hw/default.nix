@@ -8,6 +8,6 @@
     ./sysctl.nix
     ./tpm.nix
   ];
-  options.lonsdaleite.os =
+  options.lonsdaleite.hw =
     lon-lib.mkEnableFrom [ ] "hardens general hw components";
 }

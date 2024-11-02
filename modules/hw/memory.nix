@@ -9,6 +9,8 @@ in
   options.lonsdaleite.hw.memory = (mkEnableFrom [ "hw" ] "Hardens memory")
     // (mkParanoiaFrom [ "hw" ] [ "" "" "" ]) // { };
 
+  # TODO: if feature flag performance isn't set, lower these
+
   config = mkIf cfg.enable {
     environment = {
       memoryAllocator.provider =
@@ -22,9 +24,11 @@ in
         mkIf (cfg.paranoia == 1) { SCUDO_OPTIONS = "ZeroContents=1"; };
     };
     security = {
-      forcePageTableIsolation = cfg.paranoia == 2;
-      virtualisation.flushL1DataCache =
-        if (cfg.paranoia == 2) then "always" else null;
+      # TODO: set according to feature flags
+      # already enabled by nixpkgs/nixos/modules/profiles/hardened.nix
+      # forcePageTableIsolation = cfg.paranoia >= 1;
+      # virtualisation.flushL1DataCache = if (cfg.paranoia >= 1) then "always" else null;
+      # allowSimultaneousMultithreading = false;
     };
 
     # zram allows swapping to RAM by compressing memory. This reduces the chance
