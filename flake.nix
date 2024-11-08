@@ -52,13 +52,6 @@
   outputs =
     { self, nixpkgs, ... }:
     let
-      systems = [
-        "x86_64-linux"
-        # TODO: 
-        # "aarch64-linux"
-        # "i686-linux"
-      ];
-      forEachSystem = f: nixpkgs.lib.genAttrs systems f;
       inherit
         (import ./lib/flake-lib.nix {
           inherit self;
@@ -71,11 +64,13 @@
         mkFormatter
         mkGithubActions
         mkDevShell
+        forEachSystem
+        forEachSystem'
         ;
     in
     {
       nixosModules = mkModules;
-      nixosConfigurations = forEachSystem mkHosts;
+      nixosConfigurations = forEachSystem' mkHosts;
       checks = forEachSystem mkChecks;
       packages = forEachSystem mkPkgs;
       apps = forEachSystem mkApps;

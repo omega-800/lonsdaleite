@@ -9,26 +9,38 @@ let
     hasPrefix
     hasSuffix
     nixosSystem
+    genAttrs
+    attrsToList
     ;
-  inherit (builtins) readDir;
+  inherit (builtins)
+    readDir
+    pathExists
+    listToAttrs
+    concatMap
+    ;
 in
 rec {
+  systems = [
+    "x86_64-linux"
+    # TODO: 
+    # "aarch64-linux"
+    # "i686-linux"
+  ];
+
+  forEachSystem = f: genAttrs systems f;
+  forEachSystem' = f: listToAttrs (concatMap f systems);
+
   pkgs = system: nixpkgs.legacyPackages.${system};
 
-  mapDirs =
-    mapFn: dir:
-    mapAttrs' (n: v: mapFn n v) (
-      filterAttrs
-        (
-          n: v:
-          (!hasPrefix "_" n)
-          && (
-            (v == "regular" && hasSuffix ".nix" n)
-            || (v == "directory" && builtins.pathExists "${dir}/${n}/default.nix")
-          )
-        )
-        (readDir dir)
+  filterDirFn =
+    dir: n: v:
+    (!hasPrefix "_" n)
+    && (
+      (v == "regular" && hasSuffix ".nix" n) || (v == "directory" && pathExists "${dir}/${n}/default.nix")
     );
+
+  mapDirs = mapFn: dir: mapAttrs' mapFn (filterAttrs (filterDirFn dir) (readDir dir));
+  mapDirs' = mapFn: dir: map mapFn (attrsToList (filterAttrs (filterDirFn dir) (readDir dir)));
 
   mkName = filename: if hasSuffix ".nix" filename then removeSuffix ".nix" filename else filename;
 
@@ -68,19 +80,23 @@ rec {
 
   mkHosts =
     system:
-    mapDirs
+    mapDirs'
       (
-        n: v:
+        v:
         let
+          n = v.name;
           name = mkName n;
         in
-        nameValuePair name (nixosSystem {
-          inherit system;
-          modules = [
-            self.nixosModules.lonsdaleite
-            ../hosts/${n}
-          ];
-        })
+        {
+          name = "${name}-${system}";
+          value = nixosSystem {
+            inherit system;
+            modules = [
+              self.nixosModules.lonsdaleite
+              ../hosts/${n}
+            ];
+          };
+        }
       ) ../hosts;
 
   mkPkgs =
