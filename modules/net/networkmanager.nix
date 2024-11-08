@@ -1,15 +1,29 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.networkmanager;
   inherit (lib) mkIf mkMerge mkDefault;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistFiles mkPersistDirs;
+  inherit (lon-lib)
+    mkEnableFrom
+    mkParanoiaFrom
+    mkPersistFiles
+    mkPersistDirs
+    ;
   usr = config.lonsdaleite.trustedUser;
 in
 {
   options.lonsdaleite.net.networkmanager =
     (mkEnableFrom [ "net" ] "Hardens NetworkManager")
-    // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   config = mkIf cfg.enable {
     users = mkIf (usr != null && config.networking.networkmanager.enable) {

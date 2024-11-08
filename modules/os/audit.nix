@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.audit;
   inherit (lib) mkIf;
@@ -7,8 +11,14 @@ in
 {
   # https://wiki.archlinux.org/title/Audit_framework
   #TODO: research
-  options.lonsdaleite.os.audit = (mkEnableFrom [ "os" ] "Enables audit")
-    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // { };
+  options.lonsdaleite.os.audit =
+    (mkEnableFrom [ "os" ] "Enables audit")
+    // (mkParanoiaFrom [ "os" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   config = mkIf cfg.enable {
     security = {

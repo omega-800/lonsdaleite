@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.misc;
   inherit (lib) mkIf mkDefault;
@@ -8,7 +12,12 @@ in
   # Do not put anything uniquely identifying in your hostname or username. It is recommended to keep them as generic names such as "host" and "user" so you can't be identified by them. 
   options.lonsdaleite.net.misc =
     (mkEnableFrom [ "net" ] "Hardens random network related things")
-    // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   config = mkIf cfg.enable {
     networking = {
@@ -46,12 +55,16 @@ in
         # followed by a delayed `systemctl start`.
         systemd-networkd = {
           stopIfChanged = false;
-          serviceConfig = { IPv6PrivacyExtensions = "kernel"; };
+          serviceConfig = {
+            IPv6PrivacyExtensions = "kernel";
+          };
         };
         # Services that are only restarted might be not able to resolve when resolved is stopped before
         systemd-resolved.stopIfChanged = false;
         # TODO: if wifi disable
-        systemd-rfkill = { enable = true; };
+        systemd-rfkill = {
+          enable = true;
+        };
       };
       network = {
         wait-online.enable = false;

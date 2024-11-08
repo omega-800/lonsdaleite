@@ -1,14 +1,29 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.firewall;
-  inherit (lib) mkIf mkMerge concatMapStrings mkOption;
+  inherit (lib)
+    mkIf
+    mkMerge
+    concatMapStrings
+    mkOption
+    ;
   inherit (lib.types) listOf nonEmptyStr;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
 in
 {
   # TODO: https://frrouting.org/
-  options.lonsdaleite.net.firewall = (mkEnableFrom [ "net" ] "Enables firewall")
-    // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // { };
+  options.lonsdaleite.net.firewall =
+    (mkEnableFrom [ "net" ] "Enables firewall")
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
   config = mkIf cfg.enable {
     networking.firewall = {
       enable = true;

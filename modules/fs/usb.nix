@@ -1,26 +1,56 @@
-{ config, lib, lon-lib, options, ... }:
+{ config
+, lib
+, lon-lib
+, options
+, ...
+}:
 let
   cfg = config.lonsdaleite.fs.usb;
-  inherit (lib) mkIf mkMerge mkDefault mkEnableOption;
-  inherit (lon-lib) mkEnableFrom mkEnableDef mkMineralLink mkParanoiaFrom;
+  inherit (lib)
+    mkIf
+    mkMerge
+    mkDefault
+    mkEnableOption
+    ;
+  inherit (lon-lib)
+    mkEnableFrom
+    mkEnableDef
+    mkMineralLink
+    mkParanoiaFrom
+    ;
   usr = config.lonsdaleite.trustedUser;
 in
 {
-  options.lonsdaleite.fs.usb = (mkParanoiaFrom [ "fs" ] [ "" "" "" ]) // {
-    enable = mkEnableDef config.lonsdaleite.decapitated "Enables usb support";
-    usbguard =
-      (mkEnableFrom [ "fs" "usb" ] options.services.usbguard.enable.description)
-        // (mkParanoiaFrom [ "fs" "usb" ] [ "" "block" "reject" ]) // {
-        gnome-integration = mkEnableOption
-          "Enable USBGuard dbus daemon and polkit rules for integration with GNOME Shell. ${
-            mkMineralLink 537
-          }";
-        allow-at-boot = mkEnableOption
-          "Automatically whitelist all USB devices at boot in USBGuard. ${
-            mkMineralLink 532
-          }";
-      };
-  };
+  options.lonsdaleite.fs.usb =
+    (mkParanoiaFrom [ "fs" ] [
+      ""
+      ""
+      ""
+    ])
+    // {
+      enable = mkEnableDef config.lonsdaleite.decapitated "Enables usb support";
+      usbguard =
+        (mkEnableFrom [
+          "fs"
+          "usb"
+        ]
+          options.services.usbguard.enable.description)
+        // (mkParanoiaFrom
+          [
+            "fs"
+            "usb"
+          ]
+          [
+            ""
+            "block"
+            "reject"
+          ]
+        )
+        // {
+          gnome-integration = mkEnableOption "Enable USBGuard dbus daemon and polkit rules for integration with GNOME Shell. ${mkMineralLink 537}";
+          allow-at-boot = mkEnableOption "Automatically whitelist all USB devices at boot in USBGuard. ${mkMineralLink 532}";
+        };
+    };
 
   config = mkMerge [
     {
@@ -50,20 +80,16 @@ in
       };
     })
     (mkIf cfg.enable {
-      boot.kernel.sysctl."kernel.deny_new_usb" =
-        if cfg.paranoia >= 1 then "1" else "0";
+      boot.kernel.sysctl."kernel.deny_new_usb" = if cfg.paranoia >= 1 then "1" else "0";
     })
     (mkIf cfg.usbguard.enable {
       services.usbguard = {
         enable = true;
         IPCAllowedGroups = [ "wheel" ];
-        IPCAllowedUsers = [ "root" ]
-          ++ (if (usr != null) then [ usr ] else [ ]);
+        IPCAllowedUsers = [ "root" ] ++ (if (usr != null) then [ usr ] else [ ]);
         dbus.enable = cfg.usbguard.gnome-integration;
-        presentDevicePolicy =
-          if cfg.usbguard.allow-at-boot then "allow" else "apply-policy";
-        implicitPolicyTarget =
-          if cfg.usbguard.paranoia == 2 then "reject" else "block";
+        presentDevicePolicy = if cfg.usbguard.allow-at-boot then "allow" else "apply-policy";
+        implicitPolicyTarget = if cfg.usbguard.paranoia == 2 then "reject" else "block";
         presentControllerPolicy =
           if cfg.usbguard.paranoia == 2 then
             "reject"

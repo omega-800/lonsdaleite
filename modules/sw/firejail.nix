@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.sw.firejail;
   inherit (lib) mkIf;
@@ -8,13 +12,24 @@ in
   # TODO: research
   # TODO: replace? with bubblewrap, due to setuid privilege escalation & sandbox escapes 
   # https://www.openwall.com/lists/oss-security/2017/01/05/4
-  options.lonsdaleite.sw.firejail = (mkEnableFrom [ "sw" ] "Enables firejail")
-    // (mkParanoiaFrom [ "sw" ] [ "" "" "" ]) // { };
+  options.lonsdaleite.sw.firejail =
+    (mkEnableFrom [ "sw" ] "Enables firejail")
+    // (mkParanoiaFrom [ "sw" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   config = mkIf cfg.enable {
     security.chromiumSuidSandbox.enable = true;
-    nixpkgs.config.allowUnfreePredicate = pkg:
-      builtins.elem (lib.getName pkg) [ "vscode" "discord" "postman" ];
+    nixpkgs.config.allowUnfreePredicate =
+      pkg:
+      builtins.elem (lib.getName pkg) [
+        "vscode"
+        "discord"
+        "postman"
+      ];
     programs.firejail = {
       enable = true;
       wrappedBinaries = {

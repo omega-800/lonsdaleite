@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 # https://github.com/MatthewCash/nixos-config/blob/main/nixos/secureboot.nix
 # https://github.com/nix-community/lanzaboote/blob/master/docs/QUICK_START.md
 # TODO: research, implement
@@ -8,8 +12,7 @@ let
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
 in
 {
-  options.lonsdaleite.os.secureboot =
-    (mkEnableFrom [ "os" ] "Enables secureboot") // { };
+  options.lonsdaleite.os.secureboot = (mkEnableFrom [ "os" ] "Enables secureboot") // { };
 
   config = mkIf cfg.enable {
     environment = mkPersistDirs [ "/etc/secureboot" ];

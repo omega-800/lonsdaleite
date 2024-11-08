@@ -1,18 +1,36 @@
-{ options, config, lib, lon-lib, ... }:
+{ options
+, config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.fail2ban;
   svc = cfg.integrations;
-  inherit (lib) mkIf mkMerge mkOption mkDefault mkAfter genAttrs;
+  inherit (lib)
+    mkIf
+    mkMerge
+    mkOption
+    mkDefault
+    mkAfter
+    genAttrs
+    ;
   inherit (lon-lib)
-    mkEnableFrom mkParanoiaFrom mkEnableDef mkPersistDirs mkPersistFiles;
-  f2bGitUrl =
-    "https://raw.githubusercontent.com/fail2ban/fail2ban/9a558589d7e67bfd553641bd9c074f85f97c50f4";
-  fetchF2bFilter = name: sha256:
+    mkEnableFrom
+    mkParanoiaFrom
+    mkEnableDef
+    mkPersistDirs
+    mkPersistFiles
+    ;
+  f2bGitUrl = "https://raw.githubusercontent.com/fail2ban/fail2ban/9a558589d7e67bfd553641bd9c074f85f97c50f4";
+  fetchF2bFilter =
+    name: sha256:
     builtins.fetchurl {
       url = "${f2bGitUrl}/config/filter.d/${name}.conf";
       inherit sha256;
     };
-  fetchF2bAction = name: sha256:
+  fetchF2bAction =
+    name: sha256:
     builtins.fetchurl {
       url = "${f2bGitUrl}/config/action.d/${name}.conf";
       inherit sha256;
@@ -22,13 +40,23 @@ in
   #TODO: harden / research
   #TODO: fetch filters from fail2ban repo?
   #TODO: move service definitions to their respective configs?
-  options.lonsdaleite.net.fail2ban = (mkEnableFrom [ "net" ] "Enables fail2ban")
-    // (mkParanoiaFrom [ "net" ] [ "" "" "" ]) // {
-    integrations = genAttrs [ "gitlab" "nginx" "grafana" "openssh" ] (s:
-      mkEnableDef config.services.${s}.enable
-        "Creates fail2ban rules for ${s}");
-    #TODO: add apache, common, dante, mysqld, mongodb, monitorix, squid, traefik, bitwarden
-  };
+  options.lonsdaleite.net.fail2ban =
+    (mkEnableFrom [ "net" ] "Enables fail2ban")
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      ""
+    ])
+    // {
+      integrations = genAttrs [
+        "gitlab"
+        "nginx"
+        "grafana"
+        "openssh"
+      ]
+        (s: mkEnableDef config.services.${s}.enable "Creates fail2ban rules for ${s}");
+      #TODO: add apache, common, dante, mysqld, mongodb, monitorix, squid, traefik, bitwarden
+    };
 
   config = mkIf cfg.enable (mkMerge [
     {
@@ -38,8 +66,7 @@ in
         bantime-increment = {
           enable = true;
           factor = "4";
-          formula =
-            "ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)";
+          formula = "ban.Time * math.exp(float(ban.Count+1)*banFactor)/math.exp(1*banFactor)";
           maxtime = "${toString (48 + (12 * cfg.paranoia))}h";
           rndtime = "8m";
           overalljails = cfg.paranoia == 2;
@@ -109,14 +136,13 @@ in
         # findtime = 600 + (cfg.paranoia * 300);
       };
 
-      environment.etc."fail2ban/filter.d/grafana-unauthorized.conf".text =
-        mkDefault (mkAfter ''
-          [Init]
-          datepattern = ^t=%%Y-%%m-%%dT%%H:%%M:%%S%%z
+      environment.etc."fail2ban/filter.d/grafana-unauthorized.conf".text = mkDefault (mkAfter ''
+        [Init]
+        datepattern = ^t=%%Y-%%m-%%dT%%H:%%M:%%S%%z
 
-          [Definition]
-          failregex = ^(?: lvl=err?or)? msg="Invalid username or password"(?: uname=(?:"<F-ALT_USER>[^"]+</F-ALT_USER>"|<F-USER>\S+</F-USER>)| error="<F-ERROR>[^"]+</F-ERROR>"| \S+=(?:\S*|"[^"]+"))* remote_addr=<ADDR>$
-        '');
+        [Definition]
+        failregex = ^(?: lvl=err?or)? msg="Invalid username or password"(?: uname=(?:"<F-ALT_USER>[^"]+</F-ALT_USER>"|<F-USER>\S+</F-USER>)| error="<F-ERROR>[^"]+</F-ERROR>"| \S+=(?:\S*|"[^"]+"))* remote_addr=<ADDR>$
+      '');
     })
 
     (mkIf svc.gitlab {
@@ -135,8 +161,7 @@ in
         action = ''
           %(action_)s[blocktype=DROP]
                            ntfy'';
-        backend =
-          "auto"; # Do not forget to specify this if your jail uses a log file
+        backend = "auto"; # Do not forget to specify this if your jail uses a log file
         maxretry = 5 - cfg.paranoia;
         findtime = 600 + (cfg.paranoia * 300);
       };

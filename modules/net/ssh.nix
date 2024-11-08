@@ -1,32 +1,50 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.ssh;
-  inherit (lib) mkIf mkMerge concatMapStrings mkOption;
+  inherit (lib)
+    mkIf
+    mkMerge
+    concatMapStrings
+    mkOption
+    ;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEtcPersist mkPersistDirs;
+  inherit (lon-lib)
+    mkEnableFrom
+    mkParanoiaFrom
+    mkEtcPersist
+    mkPersistDirs
+    ;
 in
 {
   # TODO: change openssl to https://www.libressl.org/
-  options.lonsdaleite.net.ssh = (mkEnableFrom [ "net" ] "Hardens ssh client")
-    // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ]) // {
-    allow-hosts = mkOption {
-      type = listOf nonEmptyStr;
-      description =
-        "Hosts to allow connecting to. Only required if paranoia == 2";
-      default = [ ];
+  options.lonsdaleite.net.ssh =
+    (mkEnableFrom [ "net" ] "Hardens ssh client")
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      "enforces secure algorithms"
+    ])
+    // {
+      allow-hosts = mkOption {
+        type = listOf nonEmptyStr;
+        description = "Hosts to allow connecting to. Only required if paranoia == 2";
+        default = [ ];
+      };
+      revoked-keys = mkOption {
+        description = "Revoked keys";
+        type = listOf nonEmptyStr;
+        default = [ ];
+      };
     };
-    revoked-keys = mkOption {
-      description = "Revoked keys";
-      type = listOf nonEmptyStr;
-      default = [ ];
-    };
-  };
 
   # TODO: merge with sshd
   config = mkIf cfg.enable {
     environment = mkMerge [
-      (mkEtcPersist "ssh/sshd_revoked_host_keys"
-        (builtins.concatStringsSep "\n" cfg.revoked-keys))
+      (mkEtcPersist "ssh/sshd_revoked_host_keys" (builtins.concatStringsSep "\n" cfg.revoked-keys))
       (mkPersistDirs [
         "/etc/ssh/authorized_keys.d"
         "/etc/ssh/ssh_host_rsa_key"
@@ -103,10 +121,21 @@ in
           "hmac-sha2-256-etm@openssh.com"
           "umac-128-etm@openssh.com"
         ];
-        ciphers = [ "aes256-ctr" "aes192-ctr" "aes128-ctr" ];
-        hostKeyAlgorithms = [ "ssh-ed25519" "rsa-sha2-512" "rsa-sha2-256" ];
-        pubkeyAcceptedKeyTypes =
-          [ "ssh-ed25519" "rsa-sha2-512" "rsa-sha2-256" ];
+        ciphers = [
+          "aes256-ctr"
+          "aes192-ctr"
+          "aes128-ctr"
+        ];
+        hostKeyAlgorithms = [
+          "ssh-ed25519"
+          "rsa-sha2-512"
+          "rsa-sha2-256"
+        ];
+        pubkeyAcceptedKeyTypes = [
+          "ssh-ed25519"
+          "rsa-sha2-512"
+          "rsa-sha2-256"
+        ];
       })
     ];
   };

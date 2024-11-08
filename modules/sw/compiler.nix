@@ -1,4 +1,5 @@
-{ pkgs, ... }: {
+{ pkgs, ... }:
+{
   # nixpkgs/doc/stdenv/stdenv.chapter.md
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#hardened-compilation-flags
   nixpkgs.hostPlatform = {

@@ -1,13 +1,28 @@
-{ config, pkgs, lib, lon-lib, ... }:
+{ config
+, pkgs
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.tty;
-  inherit (lib) mkIf mkDefault mkBefore mkMerge;
+  inherit (lib)
+    mkIf
+    mkDefault
+    mkBefore
+    mkMerge
+    ;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEtcPersist;
   usr = config.lonsdaleite.trustedUser;
 in
 {
-  options.lonsdaleite.os.tty = (mkEnableFrom [ "os" ] "Hardens tty")
-    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]);
+  options.lonsdaleite.os.tty =
+    (mkEnableFrom [ "os" ] "Hardens tty")
+    // (mkParanoiaFrom [ "os" ] [
+      ""
+      ""
+      ""
+    ]);
 
   config = mkIf cfg.enable {
     # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/7/html/security_guide/sec-controlling_root_access#sec-Disallowing_Root_Access

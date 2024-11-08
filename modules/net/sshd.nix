@@ -1,37 +1,58 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.net.sshd;
-  inherit (lib) mkIf mkMerge mkDefault mkForce mkOption concatMapStrings;
+  inherit (lib)
+    mkIf
+    mkMerge
+    mkDefault
+    mkForce
+    mkOption
+    concatMapStrings
+    ;
   inherit (lib.types) listOf nonEmptyStr;
-  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+  inherit (lon-lib)
+    mkEnableFrom
+    mkParanoiaFrom
+    mkLink
+    mkEtcPersist
+    ;
   inherit (lon-lib.const) systemd;
   usr = config.lonsdaleite.trustedUser;
 in
 {
   # TODO: SetEnv and AcceptEnv fail to build if no args passed? but that's the point?
-  options.lonsdaleite.net.sshd = (mkEnableFrom [ "net" ] ''
-    Hardens ssh daemon. 
-      Sources: ${
-        mkLink "linux-audit"
-        "https://linux-audit.com/audit-and-harden-your-ssh-configuration/"
-      }'') // (mkParanoiaFrom [ "net" ] [ "" "" "enforces secure algorithms" ])
-  // {
-    allow-hosts = mkOption {
-      type = listOf nonEmptyStr;
-      description =
-        "Hosts to allow connecting to. Only required if paranoia == 2";
-      default = [ ];
+  options.lonsdaleite.net.sshd =
+    (mkEnableFrom [ "net" ]
+      ''
+        Hardens ssh daemon. 
+          Sources: ${mkLink "linux-audit" "https://linux-audit.com/audit-and-harden-your-ssh-configuration/"}''
+    )
+    // (mkParanoiaFrom [ "net" ] [
+      ""
+      ""
+      "enforces secure algorithms"
+    ])
+    // {
+      allow-hosts = mkOption {
+        type = listOf nonEmptyStr;
+        description = "Hosts to allow connecting to. Only required if paranoia == 2";
+        default = [ ];
+      };
+      revoked-keys = mkOption {
+        description = "Revoked keys";
+        type = listOf nonEmptyStr;
+        default = [ ];
+      };
     };
-    revoked-keys = mkOption {
-      description = "Revoked keys";
-      type = listOf nonEmptyStr;
-      default = [ ];
-    };
-  };
 
   config = mkIf cfg.enable {
-    environment = mkEtcPersist "ssh/sshd_revoked_keys"
-      (builtins.concatStringsSep "\n" cfg.revoked-keys);
+    environment = mkEtcPersist "ssh/sshd_revoked_keys" (
+      builtins.concatStringsSep "\n" cfg.revoked-keys
+    );
     services.openssh = mkMerge [
       {
         enable = true;
@@ -48,9 +69,13 @@ in
         # config parser mandates.
         # TODO: make persistent
         authorizedKeysFiles = mkIf
-          (!config.services.gitea.enable
-            && !config.services.gitlab.enable && !config.services.gitolite.enable
-            && !config.services.gerrit.enable && !config.services.forgejo.enable)
+          (
+            !config.services.gitea.enable
+            && !config.services.gitlab.enable
+            && !config.services.gitolite.enable
+            && !config.services.gerrit.enable
+            && !config.services.forgejo.enable
+          )
           (mkForce [ "/etc/ssh/authorized_keys.d/%u" ]);
 
         settings = {
@@ -88,8 +113,10 @@ in
           # RhostsRSAAuthentication = false;
         };
         extraConfig =
-          let t = toString (9 - (cfg.paranoia * 3));
-          in ''
+          let
+            t = toString (9 - (cfg.paranoia * 3));
+          in
+          ''
             ChannelTimeout global=${t}m
             # equals
             # ChannelTimeout x11-connection=${t}m tun-connection=${t}m session=${t}m agent-connection=${t}m direct-tcpip=${t}m direct-streamlocal@openssh.com=${t}m 
@@ -102,16 +129,14 @@ in
             ExposeAuthInfo no
             FingerprintHash sha256
             GSSAPIAuthentication no
-            KerberosAuthentication ${
-              if config.lonsdaleite.net.kerberos.enable then "yes" else "no"
-            }
+            KerberosAuthentication ${if config.lonsdaleite.net.kerberos.enable then "yes" else "no"}
             # KerberosGetAFSToken no
             KerberosOrLocalPasswd no
             KerberosTicketCleanup yes
             LoginGraceTime ${toString (120 - (cfg.paranoia * 30))}
-            MaxStartups ${toString (10 - (cfg.paranoia * 3))}:${
-              toString (30 + (cfg.paranoia * 20))
-            }:${toString (100 - (cfg.paranoia * 30))}
+            MaxStartups ${toString (10 - (cfg.paranoia * 3))}:${toString (30 + (cfg.paranoia * 20))}:${
+              toString (100 - (cfg.paranoia * 30))
+            }
             PrintLastLog yes
             RevokedKeys /etc/ssh/sshd_revoked_keys
             Compression yes
@@ -122,14 +147,15 @@ in
           # AcceptEnv 
           RequiredRSASize 3072
         '';
-        settings = mkMerge [{
-          PasswordAuthentication = false;
-          AuthenticationMethods = mkDefault "publickey";
-          # denies access to all other users by default
-          AllowUsers = if usr == null then [ ] else [ usr ];
-          AllowGroups =
-            if usr == null then [ ] else [ (lon-lib.userByName usr).group ];
-        }];
+        settings = mkMerge [
+          {
+            PasswordAuthentication = false;
+            AuthenticationMethods = mkDefault "publickey";
+            # denies access to all other users by default
+            AllowUsers = if usr == null then [ ] else [ usr ];
+            AllowGroups = if usr == null then [ ] else [ (lon-lib.userByName usr).group ];
+          }
+        ];
         allowSFTP = false;
       })
       (mkIf (cfg.paranoia == 2) {
@@ -151,13 +177,13 @@ in
           KexAlgorithms = config.programs.ssh.kexAlgorithms;
           Macs = config.programs.ssh.macs;
           Ciphers = config.programs.ssh.ciphers;
-          HostKeyAlgorithms =
-            builtins.concatStringsSep "," config.programs.ssh.hostKeyAlgorithms;
+          HostKeyAlgorithms = builtins.concatStringsSep "," config.programs.ssh.hostKeyAlgorithms;
         };
       })
     ];
     # TODO
-    systemd.services.sshd.serviceConfig =
-      mkIf config.lonsdaleite.os.systemd.enable (systemd.def // systemd.usr);
+    systemd.services.sshd.serviceConfig = mkIf config.lonsdaleite.os.systemd.enable (
+      systemd.def // systemd.usr
+    );
   };
 }

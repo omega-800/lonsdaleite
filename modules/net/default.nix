@@ -1,4 +1,5 @@
-{ lon-lib, ... }: {
+{ lon-lib, ... }:
+{
   imports = [
     ./ssh.nix
     ./sshd.nix
@@ -8,6 +9,6 @@
     ./misc.nix
     ./networkmanager.nix
   ];
-  options.lonsdaleite.net = (lon-lib.mkEnableFrom [ ] "hardens networking")
-    // (lon-lib.mkParanoiaFrom [ ] [ ]);
+  options.lonsdaleite.net =
+    (lon-lib.mkEnableFrom [ ] "hardens networking") // (lon-lib.mkParanoiaFrom [ ] [ ]);
 }

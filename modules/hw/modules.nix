@@ -18,7 +18,12 @@
   ## https://nvd.nist.gov/vuln/detail/CVE-2018-11506
   ## https://forums.whonix.org/t/blacklist-more-kernel-modules-to-reduce-attack-surface/7989/31
   ##
-  cd = { "1" = [ "cdrom" "sr_mod" ]; };
+  cd = {
+    "1" = [
+      "cdrom"
+      "sr_mod"
+    ];
+  };
   ##
   #install cdrom /usr/bin/disabled-cdrom-by-security-misc
   #install sr_mod /usr/bin/disabled-cdrom-by-security-misc
@@ -32,7 +37,14 @@
   ## https://github.com/GrapheneOS/infrastructure/blob/main/modprobe.d/local.conf
   ##
   misc = {
-    "0" = [ "cfg80211" "intel_agp" "ip_tables" "joydev" "mousedev" "psmouse" ];
+    "0" = [
+      "cfg80211"
+      "intel_agp"
+      "ip_tables"
+      "joydev"
+      "mousedev"
+      "psmouse"
+    ];
   };
   ## TODO: Re-check in Debian trixie
   ## In GrapheneOS list, yes, "should" be out-commented here.
@@ -40,10 +52,19 @@
   ## Breaks VirtualBox audio device ICH AC97, which is unfortunately still required by some users.
   ## https://www.kicksecure.com/wiki/Dev/audio
   ## https://github.com/Kicksecure/security-misc/issues/271
-  virt = { "1" = [ "snd_intel8x0" "tls" "virtio_balloon" "virtio_console" ]; };
+  virt = {
+    "1" = [
+      "snd_intel8x0"
+      "tls"
+      "virtio_balloon"
+      "virtio_console"
+    ];
+  };
 
   # blacklist the microphone module; however, this can differ from system to system. To find the name of the module, look in /proc/asound/modules and blacklist it. 
-  sound = { "1" = [ "snd_hda_intel" ]; };
+  sound = {
+    "1" = [ "snd_hda_intel" ];
+  };
 
   ## Ubuntu:
   ## Already disabled modules have been omitted.
@@ -82,35 +103,6 @@
   ## 4. Miscellaneous
 
   ## 1. Hardware:
-
-  ## Bluetooth:
-  ## Disable Bluetooth to reduce attack surface due to extended history of security vulnerabilities.
-  ##
-  ## https://en.wikipedia.org/wiki/Bluetooth#History_of_security_concerns
-  ##
-  ## Now replaced by a privacy and security preserving default Bluetooth configuration for better usability.
-  ## https://github.com/Kicksecure/security-misc/pull/145
-  ##
-  bluetooth = {
-    "1" = [
-      "bluetooth"
-      "bluetooth_6lowpan"
-      "bt3c_cs"
-      "btbcm"
-      "btintel"
-      "btmrvl"
-      "btmrvl_sdio"
-      "btmtk"
-      "btmtksdio"
-      "btmtkuart"
-      "btnxpuart"
-      "btqca"
-      "btrsi"
-      "btrtl"
-      "btsdio"
-      "virtio_bt"
-    ];
-  };
 
   ## FireWire (IEEE 1394):
   ## Disable IEEE 1394 (FireWire/i.LINK/Lynx) modules to prevent some DMA attacks.
@@ -180,7 +172,13 @@
   ##
   ## https://github.com/intel/Intel-PMT
   ##
-  pmt = { "0" = [ "pmt_class" "pmt_crashlog" "pmt_telemetry" ]; };
+  pmt = {
+    "0" = [
+      "pmt_class"
+      "pmt_crashlog"
+      "pmt_telemetry"
+    ];
+  };
 
   ## Thunderbolt:
   ## Disables Thunderbolt modules to prevent some DMA attacks.
@@ -188,7 +186,11 @@
   ## https://en.wikipedia.org/wiki/Thunderbolt_(interface)#Security_vulnerabilities
   ##
   thunderbolt = {
-    "0" = [ "intel-wmi-thunderbolt" "thunderbolt" "thunderbolt_net" ];
+    "0" = [
+      "intel-wmi-thunderbolt"
+      "thunderbolt"
+      "thunderbolt_net"
+    ];
   };
 
   ## 2. File Systems:
@@ -213,11 +215,22 @@
   ## Network File Systems:
   ## Disable uncommon network file systems to reduce attack surface.
   ##
-  uncommon = { "0" = [ "gfs2" "ksmbd" ]; };
+  uncommon = {
+    "0" = [
+      "gfs2"
+      "ksmbd"
+    ];
+  };
   ##
   ## Common Internet File System (CIFS):
   ##
-  cifs = { "0" = [ "cifs" "cifs_arc4" "cifs_md4" ]; };
+  cifs = {
+    "0" = [
+      "cifs"
+      "cifs_arc4"
+      "cifs_md4"
+    ];
+  };
   ##
   ## Network File System (NFS):
   ##
@@ -269,7 +282,14 @@
   ##
   ## Asynchronous Transfer Mode (ATM):
   ##
-  atm = { "0" = [ "atm" "ueagle-atm" "usbatm" "xusbatm" ]; };
+  atm = {
+    "0" = [
+      "atm"
+      "ueagle-atm"
+      "usbatm"
+      "xusbatm"
+    ];
+  };
   ##
   ## Controller Area Network (CAN) Protocol:
   ##
@@ -301,22 +321,40 @@
   ##
   ## Transparent Inter Process Communication (TIPC):
   ##
-  tipc = { "0" = [ "tipc" "tipc_diag" ]; };
+  tipc = {
+    "0" = [
+      "tipc"
+      "tipc_diag"
+    ];
+  };
   ##
   ## Reliable Datagram Sockets (RDS):
   ##
 
-  rds = { "0" = [ "rds" "rds_rdma" "rds_tcp" ]; };
+  rds = {
+    "0" = [
+      "rds"
+      "rds_rdma"
+      "rds_tcp"
+    ];
+  };
   ##
   ## Stream Control Transmission Protocol (SCTP):
   ##
-  sctp = { "0" = [ "sctp" "sctp_diag" ]; };
+  sctp = {
+    "0" = [
+      "sctp"
+      "sctp_diag"
+    ];
+  };
 
   ## 4. Miscellaneous:
 
   ## Amateur Radios:
   ##
-  radio = { "0" = [ "hamradio" ]; };
+  radio = {
+    "0" = [ "hamradio" ];
+  };
 
   ## CPU Model-Specific Registers (MSRs):
   ## Disable CPU MSRs as they can be abused to write to arbitrary memory.
@@ -324,11 +362,15 @@
   ## https://security.stackexchange.com/questions/119712/methods-root-can-use-to-elevate-itself-to-kernel-mode
   ## https://github.com/Kicksecure/security-misc/issues/215
   ##
-  msr = { "2" = [ "msr" ]; };
+  msr = {
+    "2" = [ "msr" ];
+  };
 
   ## Floppy Disks:
   ##
-  floppy = { "0" = [ "floppy" ]; };
+  floppy = {
+    "0" = [ "floppy" ];
+  };
 
   ## Framebuffer (fbdev):
   ## Video drivers are known to be buggy, cause kernel panics, and are generally only used by legacy devices.
@@ -377,12 +419,21 @@
   ##
   ## https://git.launchpad.net/ubuntu/+source/kmod/tree/debian/modprobe.d/blacklist.conf?h=ubuntu/disco
   ##
-  legacy = { "0" = [ "asus_acpi" "bcm43xx" "de4x5" "prism54" ]; };
+  legacy = {
+    "0" = [
+      "asus_acpi"
+      "bcm43xx"
+      "de4x5"
+      "prism54"
+    ];
+  };
 
   ## USB Video Device Class:
   ## Disables the USB-based video streaming driver for devices like some webcams and digital camcorders.
   ##
-  uvcvideo = { "2" = [ "uvcvideo" ]; };
+  uvcvideo = {
+    "2" = [ "uvcvideo" ];
+  };
 
   ## Vivid:
   ## Disables the vivid kernel module since it has been the cause of multiple vulnerabilities.
@@ -391,7 +442,9 @@
   ## https://www.openwall.com/lists/oss-security/2019/11/02/1
   ## https://github.com/a13xp0p0v/kconfig-hardened-check/commit/981bd163fa19fccbc5ce5d4182e639d67e484475
   ##
-  vivid = { "0" = [ "vivid" ]; };
+  vivid = {
+    "0" = [ "vivid" ];
+  };
 
   # SOURCE: nixosConfiguration.options.boot.blacklistedKernelModules.default
   def."0" = [ "i2c_piix4" ];

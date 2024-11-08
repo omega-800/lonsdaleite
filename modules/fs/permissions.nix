@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.fs.permissions;
   inherit (lib) mkIf mkMerge mkDefault;
@@ -7,22 +11,69 @@ in
 {
   # TODO: https://www.kicksecure.com/wiki/SUID_Disabler_and_Permission_Hardener
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#file-permissions
-  options.lonsdaleite.fs.permissions = (mkEnableFrom [ "fs" ] ''
-    Sets hardened filesystem permissions. 
-    [Partitioning guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664)
-  '') // (mkParanoiaFrom [ "fs" ] [ ]) // {
-    home = mkParanoiaOption [ "defaults" "nosuid" "noexec" ];
-    root = mkParanoiaOption [ "" "" "" ];
-    tmp = mkParanoiaOption [ "" "" "" ];
-    var = mkParanoiaOption [ "" "" "" ];
-    boot = mkParanoiaOption [ "" "" "" ];
-    srv = mkParanoiaOption [ "" "" "" ];
-    etc = mkParanoiaOption [ "" "" "" ];
-    "/" = mkParanoiaOption [ "" "" "" ];
-    usr = mkParanoiaOption [ "" "" "" ];
-    mnt = mkParanoiaOption [ "" "" "" ];
-    proc = mkParanoiaOption [ "" "" "" ];
-  };
+  options.lonsdaleite.fs.permissions =
+    (mkEnableFrom [ "fs" ] ''
+      Sets hardened filesystem permissions. 
+      [Partitioning guide](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/installation_guide/s2-diskpartrecommend-x86#idm140491990747664)
+    '')
+    // (mkParanoiaFrom [ "fs" ] [ ])
+    // {
+      home = mkParanoiaOption [
+        "defaults"
+        "nosuid"
+        "noexec"
+      ];
+      root = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      tmp = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      var = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      boot = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      srv = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      etc = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      "/" = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      usr = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      mnt = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+      proc = mkParanoiaOption [
+        ""
+        ""
+        ""
+      ];
+    };
 
   config = mkIf cfg.enable {
     systemd.tmpfiles.settings = {
@@ -52,111 +103,249 @@ in
     fileSystems = {
       "/home" = {
         device = mkDefault "/home";
-        options = [ "nodev" "nouser" "auto" "async" "usrquota" "grpqouta" "rw" ]
+        options =
+          [
+            "nodev"
+            "nouser"
+            "auto"
+            "async"
+            "usrquota"
+            "grpqouta"
+            "rw"
+          ]
           ++ (if cfg.home.paranoia == 2 then [ "noexec" ] else [ "exec" ])
-          ++ (if cfg.home.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+          ++ (
+            if cfg.home.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/root" = {
         device = mkDefault "/root";
-        options = [ "nodev" "nouser" ]
+        options =
+          [
+            "nodev"
+            "nouser"
+          ]
           ++ (if cfg.root.paranoia == 2 then [ ] else [ ])
-          ++ (if cfg.root.paranoia >= 1 then [
-          "noexec"
-          "bind"
-          "nosuid"
-        ] else
-          [ ]);
+          ++ (
+            if cfg.root.paranoia >= 1 then
+              [
+                "noexec"
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/tmp" = {
         device = "/tmp";
-        options = [
-          "nouser"
-          "nodev"
-          "noexec"
-          "noatime"
-          "usrquota"
-          "grpquota"
-          "rw"
-          "size=200M"
-          "nr_inodes=5k"
-          "mode=1700"
-        ] ++ (if cfg.tmp.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+        options =
+          [
+            "nouser"
+            "nodev"
+            "noexec"
+            "noatime"
+            "usrquota"
+            "grpquota"
+            "rw"
+            "size=200M"
+            "nr_inodes=5k"
+            "mode=1700"
+          ]
+          ++ (
+            if cfg.tmp.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/var" = {
         device = mkDefault "/var";
         options =
-          [ "defaults" "nouser" "nodev" "noatime" "usrquota" "grpqouta" ]
+          [
+            "defaults"
+            "nouser"
+            "nodev"
+            "noatime"
+            "usrquota"
+            "grpqouta"
+          ]
           ++ (if cfg.var.paranoia == 2 then [ "noexec" ] else [ "exec" ])
-          ++ (if cfg.var.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+          ++ (
+            if cfg.var.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/var/lib" = {
         device = mkDefault "/var/lib";
-        options = [ "defaults" "nodev" "nouser" ]
+        options =
+          [
+            "defaults"
+            "nodev"
+            "nouser"
+          ]
           ++ (if cfg.var.paranoia == 2 then [ "noexec" ] else [ "exec" ])
-          ++ (if cfg.var.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+          ++ (
+            if cfg.var.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/boot" = {
         device = mkDefault "/boot";
-        options = [ "defaults" "nodev" "nosuid" "umask=0077" ]
+        options =
+          [
+            "defaults"
+            "nodev"
+            "nosuid"
+            "umask=0077"
+          ]
           ++ (if cfg.boot.paranoia == 2 then [ "ro" ] else [ ])
           ++ (if cfg.boot.paranoia >= 1 then [ "noexec" ] else [ ]);
       };
       "/srv" = {
         device = mkDefault "/srv";
-        options = [ "bind" "nodev" "nouser" ]
+        options =
+          [
+            "bind"
+            "nodev"
+            "nouser"
+          ]
           ++ (if cfg.srv.paranoia == 2 then [ "noexec" ] else [ ])
           ++ (if cfg.srv.paranoia >= 1 then [ "nosuid" ] else [ ]);
       };
       "/etc" = {
         device = mkDefault "/etc";
-        options = [ "defaults" "nodev" "nouser" ]
-          ++ (if cfg.etc.paranoia >= 1 then [ "bind" "nosuid" ] else [ ]);
+        options =
+          [
+            "defaults"
+            "nodev"
+            "nouser"
+          ]
+          ++ (
+            if cfg.etc.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+              ]
+            else
+              [ ]
+          );
       };
       "/etc/nixos" = {
         device = mkDefault "/etc/nixos";
-        options = [ "defaults" "nodev" "nouser" ]
-          ++ (if cfg.etc.paranoia >= 1 then [
-          "bind"
-          "nosuid"
-          "noexec"
-        ] else
-          [ ]);
+        options =
+          [
+            "defaults"
+            "nodev"
+            "nouser"
+          ]
+          ++ (
+            if cfg.etc.paranoia >= 1 then
+              [
+                "bind"
+                "nosuid"
+                "noexec"
+              ]
+            else
+              [ ]
+          );
       };
       "/" = {
         device = mkDefault "/";
-        options = [ "defaults" ]
+        options =
+          [ "defaults" ]
           ++ (if cfg."/".paranoia == 2 then [ "mode=755" ] else [ ])
           ++ (if cfg."/".paranoia >= 1 then [ "noexec" ] else [ ]);
       };
       "/usr" = {
         device = mkDefault "/usr";
-        options = [ "defaults" "nodev" "errors=remount-ro" ];
+        options = [
+          "defaults"
+          "nodev"
+          "errors=remount-ro"
+        ];
       };
       "/usr/share" = {
         device = mkDefault "/usr/share";
-        options = [ "defaults" "nodev" ]
+        options =
+          [
+            "defaults"
+            "nodev"
+          ]
           ++ (if cfg.usr.paranoia == 2 then [ "ro" ] else [ ])
           ++ (if cfg.usr.paranoia >= 1 then [ "nosuid" ] else [ ]);
       };
       "/swap" = {
         device = mkDefault "/swap";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "nouser" "sw" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "nouser"
+          "sw"
+        ];
       };
       "/nix" = {
         device = mkDefault "/nix";
-        options = [ "defaults" "nodev" "nosuid" "nouser" "noatime" ];
+        options = [
+          "defaults"
+          "nodev"
+          "nosuid"
+          "nouser"
+          "noatime"
+        ];
       };
       "/nix/store" = {
         device = mkDefault "/nix/store";
-        options = [ "defaults" "nodev" "nosuid" "nouser" "noatime" ];
+        options = [
+          "defaults"
+          "nodev"
+          "nosuid"
+          "nouser"
+          "noatime"
+        ];
       };
       "/var/log" = {
         device = mkDefault "/var/log";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "nouser" "rw" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "nouser"
+          "rw"
+        ];
       };
       "/var/log/audit" = {
         device = mkDefault "/var/log/audit";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "nouser" "rw" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "nouser"
+          "rw"
+        ];
       };
       "/var/tmp" = {
         device = mkDefault "/var/tmp";
@@ -173,19 +362,43 @@ in
       };
       "/mnt/fd0" = {
         device = mkDefault "/mnt/fd0";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "ro" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "ro"
+        ];
       };
       "/mnt/floppy" = {
         device = mkDefault "/mnt/floppy";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "ro" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "ro"
+        ];
       };
       "/mnt/cdrom" = {
         device = mkDefault "/mnt/cdrom";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "ro" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "ro"
+        ];
       };
       "/mnt/tmp" = {
         device = mkDefault "/mnt/tmp";
-        options = [ "defaults" "nodev" "noexec" "nosuid" "ro" ];
+        options = [
+          "defaults"
+          "nodev"
+          "noexec"
+          "nosuid"
+          "ro"
+        ];
       };
     };
     boot.specialFileSystems = {

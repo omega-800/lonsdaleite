@@ -1,26 +1,42 @@
-{ config, lib, lon-lib, pkgs, ... }:
+{ config
+, lib
+, lon-lib
+, pkgs
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.pam;
-  inherit (lib) mkIf mkDefault mkBefore mkMerge mkForce genAttrs;
-  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkLink mkEtcPersist;
+  inherit (lib)
+    mkIf
+    mkDefault
+    mkBefore
+    mkMerge
+    mkForce
+    genAttrs
+    ;
+  inherit (lon-lib)
+    mkEnableFrom
+    mkParanoiaFrom
+    mkLink
+    mkEtcPersist
+    ;
   usr = config.lonsdaleite.trustedUser;
 in
 {
-  options.lonsdaleite.os.pam = (mkEnableFrom [ "os" ] ''
-    Hardens pam
-      Sources: 
-      ${
-        mkLink "Redhat"
-        "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/managing_smart_cards/pluggable_authentication_modules"
-      }
-      ${
-        mkLink "the-practical-linux-hardening-guide"
-        "https://github.com/trimstray/the-practical-linux-hardening-guide/wiki/PAM-Module"
-      }
-      ${
-        mkLink "linux-audit"
-        "https://linux-audit.com/locking-users-after-failed-login-attempts-with-pam_tally2/"
-      }'') // mkParanoiaFrom [ "os" ] [ "" "" "" ];
+  options.lonsdaleite.os.pam =
+    (mkEnableFrom [ "os" ]
+      ''
+        Hardens pam
+          Sources: 
+          ${mkLink "Redhat" "https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/6/html/managing_smart_cards/pluggable_authentication_modules"}
+          ${mkLink "the-practical-linux-hardening-guide" "https://github.com/trimstray/the-practical-linux-hardening-guide/wiki/PAM-Module"}
+          ${mkLink "linux-audit" "https://linux-audit.com/locking-users-after-failed-login-attempts-with-pam_tally2/"}''
+    )
+    // mkParanoiaFrom [ "os" ] [
+      ""
+      ""
+      ""
+    ];
 
   config = mkIf cfg.enable {
     # TODO: implement
@@ -130,57 +146,59 @@ in
         # }
       ];
       services = mkMerge [
-        (genAttrs [ "passwd" "chpasswd" ] (s: {
-          rules.password = {
-            # https://github.com/NixOS/nixpkgs/issues/287420#issuecomment-2209405124
-            unix = {
-              control = mkForce "required";
-              settings = {
-                use_authtok = true;
-                # Increase hashing rounds for /etc/shadow; this doesn't automatically
-                # rehash your passwords, you'll need to set passwords for your accounts
-                # again for this to work.
-                # By default shadow uses 5000 rounds. The more rounds it does the slower it will be to login.
-                sha512 = true;
-                shadow = true;
-                rounds = 65536;
+        (genAttrs
+          [
+            "passwd"
+            "chpasswd"
+          ]
+          (s: {
+            rules.password = {
+              # https://github.com/NixOS/nixpkgs/issues/287420#issuecomment-2209405124
+              unix = {
+                control = mkForce "required";
+                settings = {
+                  use_authtok = true;
+                  # Increase hashing rounds for /etc/shadow; this doesn't automatically
+                  # rehash your passwords, you'll need to set passwords for your accounts
+                  # again for this to work.
+                  # By default shadow uses 5000 rounds. The more rounds it does the slower it will be to login.
+                  sha512 = true;
+                  shadow = true;
+                  rounds = 65536;
+                };
+              };
+              # Require secure passwords
+              pwquality = {
+                control = "required";
+                #pam_cracklib?
+                modulePath = "${pkgs.libpwquality.lib}/lib/security/pam_pwquality.so";
+                # order BEFORE pam_unix.so
+                order = config.security.pam.services.${s}.rules.password.unix.order - 10;
+                settings = {
+                  # https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod
+                  retry = 3 - cfg.paranoia;
+                  minlen = 12 + (cfg.paranoia * 4);
+                  difok = 6 + (cfg.paranoia * 2); # difference from the old pw
+                  dcredit = -1 - cfg.paranoia; # digits
+                  ucredit = -1 - cfg.paranoia; # uppercase
+                  lcredit = -1 - cfg.paranoia; # lowercase
+                  ocredit = -1 - cfg.paranoia; # other chars
+                  minclass = 4; # must contain all char types
+                  maxrepeat = 3 - cfg.paranoia; # disallow N consecutive chars
+                  maxsequence = 4 - cfg.paranoia; # disallow N sequential chars
+                  maxclassrepeat = 5 - cfg.paranoia; # disallow N consecutive char types
+                  gecoscheck = 1; # see manpage
+                  dictcheck = 1; # enabled by default
+                  usercheck = 1; # enabled by default
+                  usersubstr = 1;
+                  enforcing = 1; # enabled by default
+                  enforce_for_root = true;
+                  use_authtok = false;
+                };
               };
             };
-            # Require secure passwords
-            pwquality = {
-              control = "required";
-              #pam_cracklib?
-              modulePath =
-                "${pkgs.libpwquality.lib}/lib/security/pam_pwquality.so";
-              # order BEFORE pam_unix.so
-              order =
-                config.security.pam.services.${s}.rules.password.unix.order
-                - 10;
-              settings = {
-                # https://github.com/libpwquality/libpwquality/blob/master/doc/man/pam_pwquality.8.pod
-                retry = 3 - cfg.paranoia;
-                minlen = 12 + (cfg.paranoia * 4);
-                difok = 6 + (cfg.paranoia * 2); # difference from the old pw
-                dcredit = -1 - cfg.paranoia; # digits
-                ucredit = -1 - cfg.paranoia; # uppercase
-                lcredit = -1 - cfg.paranoia; # lowercase
-                ocredit = -1 - cfg.paranoia; # other chars
-                minclass = 4; # must contain all char types
-                maxrepeat = 3 - cfg.paranoia; # disallow N consecutive chars
-                maxsequence = 4 - cfg.paranoia; # disallow N sequential chars
-                maxclassrepeat = 5
-                  - cfg.paranoia; # disallow N consecutive char types
-                gecoscheck = 1; # see manpage
-                dictcheck = 1; # enabled by default
-                usercheck = 1; # enabled by default
-                usersubstr = 1;
-                enforcing = 1; # enabled by default
-                enforce_for_root = true;
-                use_authtok = false;
-              };
-            };
-          };
-        }))
+          })
+        )
         {
           su.requireWheel = true;
           su-l.requireWheel = true;

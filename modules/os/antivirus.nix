@@ -1,14 +1,31 @@
-{ pkgs, config, lib, lon-lib, ... }:
+{ pkgs
+, config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.antivirus;
   inherit (lib)
-    mkIf mkMerge filterAttrs mapAttrsToList mkEnableOption concatStringsSep;
+    mkIf
+    mkMerge
+    filterAttrs
+    mapAttrsToList
+    mkEnableOption
+    concatStringsSep
+    ;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
   notifyScript = pkgs.writeShellScript "malware_detected" ./malware_detected.sh;
-  sus-user-dirs = [ "Downloads" ".mozilla" ".vscode" ];
+  sus-user-dirs = [
+    "Downloads"
+    ".mozilla"
+    ".vscode"
+  ];
   all-normal-users = filterAttrs (n: c: c.isNormalUser) config.users.users;
   all-sus-dirs = builtins.concatMap
-    (dir: mapAttrsToList (u: c: c.home + "/" + dir) all-normal-users)
+    (
+      dir: mapAttrsToList (u: c: c.home + "/" + dir) all-normal-users
+    )
     sus-user-dirs;
   all-user-folders = mapAttrsToList (u: c: c.home) all-normal-users;
   #TODO: research
@@ -20,35 +37,38 @@ let
     "/root"
     "/usr" # "/srv" "/var"
   ];
-  prefix =
-    if cfg.log-systemd then
-      "${pkgs.systemd}/bin/systemd-cat --identifier=av-scan "
-    else
-      "";
+  prefix = if cfg.log-systemd then "${pkgs.systemd}/bin/systemd-cat --identifier=av-scan " else "";
 in
 {
   #TODO: rewrite notify script
   #TODO: centralized logging
-  #TODO: persist database files and configs
   options.lonsdaleite.os.antivirus =
     (mkEnableFrom [ "os" ] "Enables antivirus (clamav)")
-    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // {
+    // (mkParanoiaFrom [ "os" ] [
+      ""
+      ""
+      ""
+    ])
+    // {
       log-systemd = mkEnableOption "Forward logs to systemd";
     };
 
   config = mkIf cfg.enable {
-    environment =
-      mkPersistDirs [ "/etc/clamav" "/var/lib/clamav" "/var/log/clamav" ];
+    environment = mkPersistDirs [
+      "/etc/clamav"
+      "/var/lib/clamav"
+      "/var/log/clamav"
+    ];
     security = mkMerge (
-      let priv = config.lonsdaleite.os.privilege;
-      in [
+      let
+        priv = config.lonsdaleite.os.privilege;
+      in
+      [
         (mkIf (priv.enable && priv.use-sudo) {
-          sudo.extraConfig =
-            "clamav ALL = (ALL) NOPASSWD: SETENV: ${pkgs.libnotify}/bin/notify-send";
+          sudo.extraConfig = "clamav ALL = (ALL) NOPASSWD: SETENV: ${pkgs.libnotify}/bin/notify-send";
         })
         (mkIf (priv.enable && (!priv.use-sudo)) {
-          doas.extraConfig =
-            "permit keepenv nopass clamav as root cmd ${pkgs.libnotify}/bin/notify-send";
+          doas.extraConfig = "permit keepenv nopass clamav as root cmd ${pkgs.libnotify}/bin/notify-send";
         })
       ]
     );
@@ -112,8 +132,7 @@ in
 
         serviceConfig = {
           Type = "simple";
-          ExecStart = prefix
-            + "${pkgs.clamav}/bin/clamonacc -F --fdpass --allmatch";
+          ExecStart = prefix + "${pkgs.clamav}/bin/clamonacc -F --fdpass --allmatch";
           PrivateTmp = "yes";
           PrivateDevices = "yes";
           PrivateNetwork = "yes";
@@ -137,10 +156,9 @@ in
         wants = [ "clamav-freshclam.service" ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = prefix
-            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${
-              concatStringsSep " " all-user-folders
-            }";
+          ExecStart =
+            prefix
+            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${concatStringsSep " " all-user-folders}";
         };
       };
 
@@ -167,10 +185,9 @@ in
         wants = [ "clamav-freshclam.service" ];
         serviceConfig = {
           Type = "oneshot";
-          ExecStart = prefix
-            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${
-              concatStringsSep " " all-system-folders
-            }";
+          ExecStart =
+            prefix
+            + "${pkgs.clamav}/bin/clamdscan --quiet --recursive --fdpass --multiscan --allmatch --infected ${concatStringsSep " " all-system-folders}";
         };
       };
     };

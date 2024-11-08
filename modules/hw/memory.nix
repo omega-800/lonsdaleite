@@ -1,4 +1,8 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.hw.memory;
   inherit (lib) mkIf;
@@ -6,8 +10,14 @@ let
 in
 {
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#hardened-malloc
-  options.lonsdaleite.hw.memory = (mkEnableFrom [ "hw" ] "Hardens memory")
-    // (mkParanoiaFrom [ "hw" ] [ "" "" "" ]) // { };
+  options.lonsdaleite.hw.memory =
+    (mkEnableFrom [ "hw" ] "Hardens memory")
+    // (mkParanoiaFrom [ "hw" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   # TODO: if feature flag performance isn't set, lower these
 
@@ -20,8 +30,7 @@ in
           "scudo"
         else
           "graphene-hardened";
-      variables =
-        mkIf (cfg.paranoia == 1) { SCUDO_OPTIONS = "ZeroContents=1"; };
+      variables = mkIf (cfg.paranoia == 1) { SCUDO_OPTIONS = "ZeroContents=1"; };
     };
     security = {
       # TODO: set according to feature flags

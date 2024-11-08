@@ -15,6 +15,7 @@
   # https://github.com/qbit/xin
   # https://github.com/Mic92/dotfiles
   # https://mayflower.de/
+  # https://kspp.github.io/
   # 
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html
@@ -37,20 +38,49 @@
       url = "github:omega-800/apparmor.d";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # TODO: remove these in "prod"
+    nix-github-actions = {
+      url = "github:nix-community/nix-github-actions";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+    pre-commit-hooks = {
+      url = "github:cachix/git-hooks.nix";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
-  outputs = { self, nixpkgs, ... }:
+  outputs =
+    { self, nixpkgs, ... }:
     let
-      # TODO: system
-      flake-lib = import ./lib/flake-lib.nix {
-        inherit self;
-        pkgs = nixpkgs.legacyPackages."x86_64-linux";
-      };
+      systems = [
+        "x86_64-linux"
+        # TODO: 
+        # "aarch64-linux"
+        # "i686-linux"
+      ];
+      forEachSystem = f: nixpkgs.lib.genAttrs systems f;
+      inherit
+        (import ./lib/flake-lib.nix {
+          inherit self;
+        })
+        mkModules
+        mkHosts
+        mkChecks
+        mkPkgs
+        mkApps
+        mkFormatter
+        mkGithubActions
+        mkDevShell
+        ;
     in
     {
-      nixosModules = flake-lib.mkModule;
-      nixosConfigurations = flake-lib.mkHosts "x86_64-linux";
-      checks = flake-lib.mkChecks "x86_64-linux";
-      packages = flake-lib.mkPkgs "x86_64-linux";
+      nixosModules = mkModules;
+      nixosConfigurations = forEachSystem mkHosts;
+      checks = forEachSystem mkChecks;
+      packages = forEachSystem mkPkgs;
+      apps = forEachSystem mkApps;
+      devShells = forEachSystem mkDevShell;
+      formatter = forEachSystem mkFormatter;
+      githubActions = mkGithubActions;
     };
 }

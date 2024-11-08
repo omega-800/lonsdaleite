@@ -1,11 +1,15 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.random;
   inherit (lib) mkIf;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
-in {
-  options.lonsdaleite.os.random =
-    (mkEnableFrom [ "os" ] "Enables better entropy") // { };
+in
+{
+  options.lonsdaleite.os.random = (mkEnableFrom [ "os" ] "Enables better entropy") // { };
 
   config = mkIf cfg.enable {
     # Get extra entropy since we disabled hardware entropy sources

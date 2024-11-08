@@ -1,4 +1,5 @@
-{ modulesPath, lib, pkgs, ... }: {
+{ modulesPath, pkgs, ... }:
+{
   imports = [ "${modulesPath}/virtualisation/qemu-vm.nix" ];
 
   lonsdaleite = {
@@ -8,15 +9,18 @@
     decapitated = false;
     os = {
       enable = false;
+      antivirus.enable = true;
+      audit.enable = true;
+      boot.enable = true;
+      nixos.enable = true;
+      # pam.enable = true;
       # privilege.enable = true;
       random.enable = true;
-      # pam.enable = true;
-      tty.enable = true;
-      antivirus.enable = true;
+      # secureboot.enable = true;
       systemd.enable = true;
-      # TODO
-      audit.enable = false;
-      secureboot.enable = false;
+      tty.enable = true;
+      update.enable = true;
+      users.enable = true;
     };
     net = {
       ssh.enable = true;
@@ -39,6 +43,10 @@
       initialPassword = "test";
       extraGroups = [ "wheel" ];
     };
+    bob = {
+      isNormalUser = true;
+      initialPassword = "test";
+    };
     root.initialPassword = "test";
   };
   services = {
@@ -57,7 +65,16 @@
     # woah didn't realize qemu can do serial "forwarding"
     # openssh.settings.PasswordAuthentication = lib.mkForce true;
   };
-  environment.systemPackages = with pkgs; [ lynis vulnix vim ];
+  nix.settings.experimental-features = [
+    "nix-command"
+    "flakes"
+  ];
+  environment.systemPackages = with pkgs; [
+    lynis
+    vulnix
+    chipsec
+    vim
+  ];
 
   boot.loader.grub.devices = [ "/dev/sda" ];
   system.stateVersion = "24.05";

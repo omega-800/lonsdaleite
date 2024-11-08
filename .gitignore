@@ -1,5 +1,7 @@
 .null-ls*
 result
-nixos.*
+nixos.qcow2
+.nixos-test*
 run.sh
 core
+logs/*

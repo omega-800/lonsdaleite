@@ -1,19 +1,25 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.update;
   inherit (lib) mkIf;
   inherit (lon-lib) mkEnableFrom;
 in
 {
-  options.lonsdaleite.os.update =
-    (mkEnableFrom [ "os" ] "Enables automatic updates");
+  options.lonsdaleite.os.update = (mkEnableFrom [ "os" ] "Enables automatic updates");
   config = mkIf cfg.enable {
     system.autoUpgrade = {
       enable = true;
       # TODO: make this configurable
       allowReboot = false;
       dates = "04:00";
-      flags = [ "--update-input" "lonsdaleite" ];
+      flags = [
+        "--update-input"
+        "lonsdaleite"
+      ];
       # TODO: flake = "";
       operation = "switch";
       randomizedDelaySec = "15min";

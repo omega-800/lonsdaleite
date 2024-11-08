@@ -1,10 +1,14 @@
-{ config, lib, lon-lib, ... }:
+{ config
+, lib
+, lon-lib
+, ...
+}:
 let
   cfg = config.lonsdaleite.os.systemd;
   inherit (lib) mkIf mkMerge;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
-  # TODO: difference between boot.initrd.systemd.services and systemd.services?
 in
+# TODO: difference between boot.initrd.systemd.services and systemd.services?
 {
   # https://documentation.suse.com/smart/security/html/systemd-securing/index.html
   # https://github.com/alegrey91/systemd-service-hardening
@@ -12,8 +16,14 @@ in
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#systemd-service-sandboxing
   # TODO: research
   # man systemd.exec
-  options.lonsdaleite.os.systemd = (mkEnableFrom [ "os" ] "Hardens systemd")
-    // (mkParanoiaFrom [ "os" ] [ "" "" "" ]) // { };
+  options.lonsdaleite.os.systemd =
+    (mkEnableFrom [ "os" ] "Hardens systemd")
+    // (mkParanoiaFrom [ "os" ] [
+      ""
+      ""
+      ""
+    ])
+    // { };
 
   config = mkIf cfg.enable {
     # Given that our systems are headless, emergency mode is useless.
@@ -141,8 +151,11 @@ in
             } // def;
             syslog.serviceConfig = {
               PrivateNetwork = true;
-              CapabilityBoundingSet =
-                [ "CAP_DAC_READ_SEARCH" "CAP_SYSLOG" "CAP_NET_BIND_SERVICE" ];
+              CapabilityBoundingSet = [
+                "CAP_DAC_READ_SEARCH"
+                "CAP_SYSLOG"
+                "CAP_NET_BIND_SERVICE"
+              ];
               PrivateDevices = true;
               ProtectKernelLogs = true;
               PrivateMounts = true;
@@ -186,8 +199,7 @@ in
             rescue.serviceConfig = {
               PrivateUsers = true;
               #PrivateDevices = true;  # Might need adjustment for rescue operations
-              RestrictAddressFamilies =
-                "AF_INET AF_INET6"; # Networking might be necessary in rescue mode
+              RestrictAddressFamilies = "AF_INET AF_INET6"; # Networking might be necessary in rescue mode
               inherit SystemCallFilter;
               #FIXME
               #IPAddressDeny = "any";  # May need to be relaxed for network troubleshooting in rescue mode
@@ -311,8 +323,7 @@ in
               #PrivateUsers = true;  # Be cautious, as this may restrict user operations
               PrivateDevices = true;
               RestrictAddressFamilies = "AF_INET AF_INET6";
-              SystemCallFilter =
-                [ "@system-service" ]; # Adjust based on user needs
+              SystemCallFilter = [ "@system-service" ]; # Adjust based on user needs
             } // def // virt;
             "nixos-rebuild-switch-to-configuration".serviceConfig = {
               ProtectHome = true;
@@ -334,8 +345,7 @@ in
               PrivateUsers = true;
               #PrivateDevices = true;  # May need adjustment for accessing VM logs
               RestrictAddressFamilies = "AF_INET AF_INET6";
-              SystemCallFilter =
-                [ "@system-service" ]; # Adjust based on log management needs
+              SystemCallFilter = [ "@system-service" ]; # Adjust based on log management needs
               #FIXME
               #IPAddressDeny = "any";  # May need to be relaxed for network-based log collection
             } // def // virt;

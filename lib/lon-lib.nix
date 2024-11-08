@@ -2,9 +2,21 @@
 let
   rootConfig = config.lonsdaleite;
   inherit (lib)
-    mkOption attrByPath concatImapStringsSep concatStringsSep splitString
-    findFirst mapAttrsToList filterAttrs take length mkMerge mkIf hasPrefix
-    hasSuffix;
+    mkOption
+    attrByPath
+    concatImapStringsSep
+    concatStringsSep
+    splitString
+    findFirst
+    mapAttrsToList
+    filterAttrs
+    take
+    length
+    mkMerge
+    mkIf
+    hasPrefix
+    hasSuffix
+    ;
   inherit (lib.types) bool enum ints;
   const = import ./const.nix;
 in
@@ -20,30 +32,27 @@ rec {
   mkLowerForce = val: lib.mkOverride 200 val;
   mkLowForce = val: lib.mkOverride 100 val;
 
-  userByName = name:
-    findFirst (u: u.name == name) null
-      (mapAttrsToList (n: v: v) config.users.users);
+  userByName = name: findFirst (u: u.name == name) null (mapAttrsToList (n: v: v) config.users.users);
 
   mkDisableOption = description: mkEnableDef true description;
-  mkEnableDef = default: description:
+  mkEnableDef =
+    default: description:
     mkOption {
       inherit default description;
       type = bool;
     };
   mkEnableFrom = path: description: {
-    enable = mkEnableDef (attrByPath (path ++ [ "enable" ]) false rootConfig)
-      (description + "Defaults to: `config.lonsdaleite.${
-          concatStringsSep "." path
-        }.enable'");
+    enable = mkEnableDef (attrByPath (path ++ [ "enable" ]) false rootConfig) (
+      description + "Defaults to: `config.lonsdaleite.${concatStringsSep "." path}.enable'"
+    );
   };
   mkParanoiaOptionWithInfo = descriptions: default: info: {
     paranoia = mkOption {
       inherit default;
       description = ''
-        ${concatImapStringsSep "\n" (i: d:
-          "${toString i}: ${
-            (if ((builtins.match "^$" d) == null) then d else "no effect")
-          }") descriptions}
+        ${concatImapStringsSep "\n" (
+          i: d: "${toString i}: ${(if ((builtins.match "^$" d) == null) then d else "no effect")}"
+        ) descriptions}
         ${info}
       '';
       type = paranoiaType;
@@ -51,54 +60,74 @@ rec {
     };
   };
 
-  mkParanoiaOptionDef = descriptions: default:
-    mkParanoiaOptionWithInfo descriptions default "";
+  mkParanoiaOptionDef = descriptions: default: mkParanoiaOptionWithInfo descriptions default "";
 
-  mkParanoiaOption = descriptions:
-    mkParanoiaOptionDef descriptions rootConfig.paranoia;
+  mkParanoiaOption = descriptions: mkParanoiaOptionDef descriptions rootConfig.paranoia;
 
-  mkParanoiaFrom = path: descriptions:
+  mkParanoiaFrom =
+    path: descriptions:
     mkParanoiaOptionWithInfo descriptions
-      (attrByPath (path ++ [ "paranoia" ]) 2 rootConfig)
-      "Defaults to: config.lonsdaleite.${concatStringsSep "." path}.paranoia";
+      (attrByPath
+        (
+          path ++ [ "paranoia" ]
+        ) 2
+        rootConfig) "Defaults to: config.lonsdaleite.${concatStringsSep "." path}.paranoia";
 
   mkLink = name: url: "[${name}](${url})";
   mkSrcLink = url: mkLink "Source" url;
   mkCopyLink = name: url: mkLink "Copied from `${name}`" url;
-  mkMineralLink = line:
-    mkCopyLink "nix-mineral"
-      "https://github.com/cynicsketch/nix-mineral/blob/6c6e7886925e81b39e9d85c74d8c0b1c91889b96/nix-mineral.nix#L${
-      toString line
-    }";
+  mkMineralLink =
+    line:
+    mkCopyLink "nix-mineral" "https://github.com/cynicsketch/nix-mineral/blob/6c6e7886925e81b39e9d85c74d8c0b1c91889b96/nix-mineral.nix#L${toString line}";
 
-  fileNamesNoExt = dir:
+  fileNamesNoExt =
+    dir:
     mapAttrsToList
-      (n: v:
-        let split = splitString "." n;
-        in concatStringsSep "." (take ((length split) - 1) split))
+      (
+        n: v:
+        let
+          split = splitString "." n;
+        in
+        concatStringsSep "." (take ((length split) - 1) split)
+      )
       (filterAttrs (n: v: v == "regular") (builtins.readDir dir));
 
-  mkEtcPersist = file: content:
+  mkEtcPersist =
+    file: content:
     mkMerge [
       { etc."${file}".text = content; }
       (mkIf config.lonsdaleite.fs.impermanence.enable {
         persistence."/nix/persist".files = [ "/etc/${file}" ];
       })
     ];
-  mkPersistFiles = files:
+  mkPersistFiles =
+    files:
     mkIf config.lonsdaleite.fs.impermanence.enable {
-      persistence."/nix/persist" = { inherit files; };
+      persistence."/nix/persist" = {
+        inherit files;
+      };
     };
-  mkPersistDirs = directories:
+  mkPersistDirs =
+    directories:
     mkIf config.lonsdaleite.fs.impermanence.enable {
-      persistence."/nix/persist" = { inherit directories; };
+      persistence."/nix/persist" = {
+        inherit directories;
+      };
     };
 
   # yeah nice try, yields infinite recursion
-  mkImport = dir:
-    map (n: v: n) (filterAttrs
-      (n: v:
-        (!hasPrefix "_" n) && ((v == "regular" && hasSuffix ".nix" n)
-        || (v == "directory" && builtins.pathExists "${dir}/${n}/default.nix")))
-      (builtins.readDir dir));
+  mkImport =
+    dir:
+    map (n: v: n) (
+      filterAttrs
+        (
+          n: v:
+          (!hasPrefix "_" n)
+          && (
+            (v == "regular" && hasSuffix ".nix" n)
+            || (v == "directory" && builtins.pathExists "${dir}/${n}/default.nix")
+          )
+        )
+        (builtins.readDir dir)
+    );
 }
