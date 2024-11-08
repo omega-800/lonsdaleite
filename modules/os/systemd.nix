@@ -5,8 +5,15 @@
 }:
 let
   cfg = config.lonsdaleite.os.systemd;
-  inherit (lib) mkIf mkMerge;
+  inherit (lib)
+    mkIf
+    mkMerge
+    mkOption
+    types
+    mkForce
+    ;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
+  inherit (builtins) mapAttrs elem attrNames;
 in
 # TODO: difference between boot.initrd.systemd.services and systemd.services?
 {
@@ -16,16 +23,149 @@ in
   # https://madaidans-insecurities.github.io/guides/linux-hardening.html#systemd-service-sandboxing
   # TODO: research
   # man systemd.exec
-  options.lonsdaleite.os.systemd =
-    (mkEnableFrom [ "os" ] "Hardens systemd")
-    // (mkParanoiaFrom [ "os" ] [
-      ""
-      ""
-      ""
-    ])
-    // { };
+  options = {
+    lonsdaleite.os.systemd =
+      (mkEnableFrom [ "os" ] "Hardens systemd")
+      // (mkParanoiaFrom [ "os" ] [
+        ""
+        ""
+        ""
+      ])
+      // {
+        confineAll = {
+          enable = mkOption {
+            type = types.bool;
+            default = cfg.paranoia > 0;
+            description = ''
+              Confines all systemd services. 
+              WARNING: Will render your system unusable if the systemd services you need aren't whitelisted.
+            '';
+          };
+          fullUnit = mkOption {
+            type = types.bool;
+            default = cfg.confineAll && cfg.paranoia == 2;
+            description = ''
+              Sets fullUnit = true to all systemd confinements. 
+              WARNING: If you do not want your machine to just be a fancy brick, whitelist the services you need or override their serviceConfig.
+            '';
+          };
+          # TODO: whitelist only required services by default
+          # check if commented-out services still work
+          whitelist = mkOption {
+            type = types.listOf types.str;
+            description = "Systemd services to be whitelisted.";
+            default = [
+              # "ModemManager"
+              # "NetworkManager"
+              # "NetworkManager-dispatcher"
+              # "NetworkManager-wait-online"
+              "apparmor"
+              "audit"
+              "auto-cpufreq"
+              # "autovt@"
+              # "av-all-scan"
+              # "av-user-scan"
+              # "clamav-clamonacc"
+              # "clamav-daemon"
+              # "clamav-fangfrisch"
+              # "clamav-fangfrisch-init"
+              # "clamav-freshclam"
+              "console-getty"
+              "container-getty@"
+              "container@"
+              "dbus"
+              "disable-kernel-module-loading"
+              # "display-manager"
+              # "emergency"
+              "firewall"
+              "generate-shutdown-ramfs"
+              # "getty@"
+              # "getty@tty1"
+              # "getty@tty7"
+              "jitterentropy"
+              "kmod-static-nodes"
+              "logrotate"
+              "logrotate-checkconf"
+              "mount-pstore"
+              "network-local-commands"
+              # "nix-daemon"
+              # "nix-gc"
+              # "nix-optimise"
+              # "nixos-rebuild-switch-to-configuration"
+              # "nixos-upgrade"
+              "nscd"
+              "polkit"
+              "post-resume"
+              "pre-sleep"
+              "prepare-kexec"
+              # "qemu-guest-agent"
+              "reload-systemd-vconsole-setup"
+              # "rescue"
+              "save-hwclock"
+              "serial-getty@"
+              # "sshd"
+              "suid-sgid-wrappers"
+              "syslog"
+              "systemd-ask-password-console"
+              "systemd-ask-password-wall"
+              "systemd-backlight@"
+              "systemd-fsck@"
+              "systemd-importd"
+              "systemd-journal-flush"
+              "systemd-journald"
+              "systemd-journald@"
+              "systemd-logind"
+              "systemd-makefs@"
+              "systemd-mkswap@"
+              "systemd-modules-load"
+              "systemd-network-wait-online@"
+              "systemd-networkd"
+              "systemd-networkd-wait-online"
+              "systemd-nspawn@"
+              "systemd-oomd"
+              "systemd-pstore"
+              "systemd-random-seed"
+              "systemd-remount-fs"
+              "systemd-resolved"
+              "systemd-rfkill"
+              "systemd-sysctl"
+              "systemd-timedated"
+              "systemd-tmpfiles-resetup"
+              "systemd-udev-settle"
+              "systemd-udevd"
+              "systemd-update-utmp"
+              "systemd-user-sessions"
+              "thermald"
+              "user-runtime-dir@"
+              "user@"
+              "user@1000"
+            ];
+          };
+        };
+      };
+    # override defaults for all systemd services
+    systemd.services = mkOption {
+      type = types.attrsOf (
+        types.submodule (
+          { name, ... }:
+          {
+            config.confinement = mkIf (!(elem name cfg.confineAll.whitelist)) {
+              inherit (cfg.confineAll) enable fullUnit;
+            };
+          }
+        )
+      );
+    };
+  };
 
   config = mkIf cfg.enable {
+    assertions = map
+      (name: {
+        assertion = elem name (attrNames config.systemd.services);
+        message = "`lonsdaleite.os.systemd.confineAll.whitelist' must only contain values in (attrNames `systemd.services'). Offending value is \"${name}\"";
+      })
+      cfg.confineAll.whitelist;
+
     # Given that our systems are headless, emergency mode is useless.
     # We prefer the system to attempt to continue booting so
     # that we can hopefully still access it remotely.

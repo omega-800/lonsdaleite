@@ -8,6 +8,7 @@ let
   cfg = config.lonsdaleite.os.antivirus;
   inherit (lib)
     mkIf
+    mkForce
     mkMerge
     filterAttrs
     mapAttrsToList
@@ -124,6 +125,14 @@ in
       };
     };
     systemd = {
+      # FIXME: upstream pull request, add check != "yes"
+      # https://github.com/NixOS/nixpkgs/blob/f069d542234727fa1821ed96a69360474a7a2abf/nixos/modules/security/systemd-confinement.nix#L189
+      # needs to be boolean for systemd confinement
+      services.clamav-daemon.serviceConfig.PrivateTmp = mkForce true;
+      services.clamav-fangfrisch.serviceConfig.PrivateTmp = mkForce true;
+      services.clamav-fangfrisch-init.serviceConfig.PrivateTmp = mkForce true;
+      services.clamav-freshclam.serviceConfig.PrivateTmp = mkForce true;
+
       services.clamav-clamonacc = {
         description = "ClamAV daemon (clamonacc)";
         after = [ "clamav-freshclam.service" ];
@@ -133,9 +142,9 @@ in
         serviceConfig = {
           Type = "simple";
           ExecStart = prefix + "${pkgs.clamav}/bin/clamonacc -F --fdpass --allmatch";
-          PrivateTmp = "yes";
-          PrivateDevices = "yes";
-          PrivateNetwork = "yes";
+          PrivateTmp = true;
+          PrivateDevices = true;
+          PrivateNetwork = true;
         };
       };
 
