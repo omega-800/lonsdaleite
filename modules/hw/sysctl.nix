@@ -17,6 +17,7 @@ in
       })
       {
         # TODO: attribute sources
+        # https://pastebin.com/VwrgZsJJ
         # https://theprivacyguide1.github.io/linux_hardening_guide
         # https://github.com/cynicsketch/nix-mineral
         # https://madaidans-insecurities.github.io/guides/linux-hardening.html

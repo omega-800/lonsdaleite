@@ -10,7 +10,7 @@
     os = {
       enable = false;
       antivirus.enable = true;
-      # audit.enable = true;
+      audit.enable = true;
       boot.enable = true;
       nixos.enable = true;
       # pam.enable = true;

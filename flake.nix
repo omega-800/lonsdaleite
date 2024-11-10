@@ -23,6 +23,7 @@
   # https://github.com/NixOS/nixpkgs/pull/7212
   # https://www.redhat.com/en/blog/automated-auditing-system-using-scap
   # https://presentations.nordisch.org/apparmor/#/
+  # https://github.com/konstruktoid/hardening
 
   description = "NixOS module to harden your system";
 
