@@ -67,5 +67,85 @@ in
       DeviceAllow = "char-rtc";
       DevicePolicy = "closed";
     };
+    # https://github.com/i-learned-eu/systemd-hardened/blob/main/dnsmasq/dnsmasq.service
+    dnsmasq.serviceConfig = {
+      User = "dnsmasq";
+      AmbientCapabilities = [ "CAP_NET_BIND_SERVICE" ];
+      CapabilityBoundingSet = [ "CAP_NET_BIND_SERVICE" ];
+      SecureBits = "keep-caps";
+      NoNewPrivileges = true;
+      UMask = "0077";
+      ProtectHome = true;
+      RestrictNamespaces = true;
+      RestrictAddressFamilies = [
+        "AF_UNIX"
+        "AF_INET"
+        "AF_INET6"
+        "AF_NETLINK"
+      ];
+      PrivateTmp = true;
+      PrivateDevices = true;
+      ProtectClock = true;
+      ProtectControlGroups = true;
+      ProtectKernelTunables = true;
+      ProtectKernelLogs = true;
+      ProtectKernelModules = true;
+      LockPersonality = true;
+      RestrictSUIDSGID = true;
+      RemoveIPC = true;
+      RestrictRealtime = true;
+      SystemCallFilter = [ "@system-service" ];
+      SystemCallArchitectures = "native";
+      MemoryDenyWriteExecute = true;
+      ProtectSystem = "full";
+      ProtectHostname = true;
+      ProcSubset = "pid";
+      ProtectProc = "ptraceable";
+      ReadWriteDirectories = [ "/run/dnsmasq" ];
+    };
+    # https://github.com/rusty-snake/kyst/blob/main/systemd/avahi-daemon.service.d%2Boverride.conf
+    avahi-daemon.serviceConfig = {
+      PrivateDevices = true;
+      ProtectClock = true;
+      CapabilityBoundingSet = [
+        "CAP_DAC_OVERRIDE"
+        "CAP_SETUID"
+        "CAP_SETGID"
+        "CAP_SYS_CHROOT"
+      ];
+      ProtectKernelLogs = true;
+      ProtectControlGroups = true;
+      ProtectKernelModules = true;
+      SystemCallArchitectures = "native";
+      MemoryDenyWriteExecute = true;
+      RestrictNamespaces = true;
+      RestrictSUIDSGID = true;
+      LockPersonality = true;
+      ProtectKernelTunables = true;
+      RestrictAddressFamilies = [
+        "AF_UNIX"
+        "AF_INET"
+        "AF_INET6"
+        "AF_NETLINK"
+      ];
+      RestrictRealtime = true;
+      ProtectSystem = "full";
+      ProtectProc = "invisible";
+      ProcSubset = "pid";
+      ProtectHome = true;
+      PrivateTmp = true;
+      SystemCallFilter = [
+        "@system-service"
+        "chroot"
+        "~@resources"
+      ];
+      InaccessiblePaths = [
+        "-/boot"
+        "-/mnt"
+        "-/media"
+        "-/run/media"
+      ];
+      PrivateIPC = true;
+    };
   };
 }

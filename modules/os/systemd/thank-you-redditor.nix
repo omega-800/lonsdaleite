@@ -211,6 +211,20 @@ in
           ProtectKernelTunables = true;
           ProtectKernelModules = true;
         };
+        "getty@".serviceConfig = {
+          PrivateUsers = true;
+          PrivateDevices = true;
+          RestrictAddressFamilies = "AF_INET";
+          IPAddressDeny = "any";
+          inherit SystemCallFilter;
+        } // def // virt;
+        "getty@tty2".serviceConfig = {
+          PrivateUsers = true;
+          PrivateDevices = true;
+          RestrictAddressFamilies = "AF_INET";
+          IPAddressDeny = "any";
+          inherit SystemCallFilter;
+        } // def // virt;
         "getty@tty1".serviceConfig = {
           PrivateUsers = true;
           PrivateDevices = true;
