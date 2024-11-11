@@ -1,5 +1,5 @@
 # TODO: research https://madaidans-insecurities.github.io/guides/linux-hardening.html\#d-bus
-{ pkgs, ... }:
+{ pkgs, lib, ... }:
 {
   # https://github.com/fort-nix/nix-bitcoin/blob/master/modules/security.nix
   services.dbus.packages = lib.mkAfter [
