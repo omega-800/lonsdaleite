@@ -13,7 +13,7 @@ let
     mkDefault
     mkForce
     ;
-  inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
+  inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkHighDefault;
   inherit (builtins) mapAttrs elem attrNames;
 in
 # TODO: difference between boot.initrd.systemd.services and systemd.services?
@@ -94,8 +94,8 @@ in
               # "getty@tty7"
               "jitterentropy"
               "kmod-static-nodes"
-              "logrotate"
-              "logrotate-checkconf"
+              # "logrotate"
+              # "logrotate-checkconf"
               "mount-pstore"
               "network-local-commands"
               # "nix-daemon"
@@ -161,23 +161,23 @@ in
           let
             # https://developer.hashicorp.com/vault/tutorials/operations/production-hardening#extended-recommendations
             serviceConfig = {
-              "ProtectSystem" = mkDefault "full";
-              "PrivateTmp" = mkDefault true;
-              "CapabilityBoundingSet" = mkDefault [
+              "ProtectSystem" = mkHighDefault "full";
+              "PrivateTmp" = mkHighDefault true;
+              "CapabilityBoundingSet" = mkHighDefault [
                 "CAP_SYSLOG"
                 "CAP_IPC_LOCK"
               ];
-              "AmbientCapabilities" = mkDefault "CAP_IPC_LOCK";
-              "ProtectHome" = mkDefault "read-only";
-              "PrivateDevices" = mkDefault true;
-              "NoNewPrivileges" = mkDefault true;
+              "AmbientCapabilities" = mkHighDefault "CAP_IPC_LOCK";
+              "ProtectHome" = mkHighDefault "read-only";
+              "PrivateDevices" = mkHighDefault true;
+              "NoNewPrivileges" = mkHighDefault true;
             };
           in
           {
             config = {
+              inherit serviceConfig;
               confinement = mkIf (!(elem name cfg.confineAll.whitelist)) {
                 inherit (cfg.confineAll) enable fullUnit;
-                inherit serviceConfig;
               };
             };
           }

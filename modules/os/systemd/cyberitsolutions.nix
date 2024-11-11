@@ -39,9 +39,9 @@ in
   # https://github.com/cyberitsolutions/bootstrap2020/
   systemd.services = mkIf cfg.enable {
     # https://github.com/cyberitsolutions/prisonpc-systemd-lockdown/blob/main/systemd/system/postgresql%40.service.d/40-opt-in-allow.conf
-    "postgresql@".serviceConfig = mkMerge [
-      default-deny
-      {
+    "postgresql@".serviceConfig =
+      # TODO: merge lists
+      default-deny // {
         User = "";
         PrivateUsers = false;
         CapabilityBoundingSet = [
@@ -65,7 +65,6 @@ in
           "/var/lib/postgresql"
           "/var/log/postgresql"
         ];
-      }
-    ];
+      };
   };
 }

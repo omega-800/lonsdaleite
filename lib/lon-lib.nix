@@ -27,6 +27,7 @@ rec {
 
   paranoiaType = ints.between 0 2;
 
+  mkLowDefault = val: lib.mkOverride 1100 val;
   mkHighDefault = val: lib.mkOverride 900 val;
   mkHigherDefault = val: lib.mkOverride 800 val;
   mkLowerForce = val: lib.mkOverride 200 val;

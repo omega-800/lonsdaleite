@@ -36,10 +36,10 @@ in
       LockPersonality = true;
       MemoryDenyWriteExecute = true;
       NoNewPrivileges = true;
-      PrivateMounts = "yes";
-      PrivateTmp = "yes";
+      PrivateMounts = true;
+      PrivateTmp = true;
       ProtectControlGroups = true;
-      ProtectHome = "yes";
+      ProtectHome = true;
       ProtectHostname = true;
       ProtectKernelModules = true;
       ProtectKernelTunables = true;
