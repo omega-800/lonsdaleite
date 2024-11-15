@@ -51,7 +51,10 @@ rec {
     {
       pre-commit-check = self.inputs.pre-commit-hooks.lib.${system}.run {
         src = ./.;
-        hooks.nixpkgs-fmt.enable = true;
+        hooks = {
+          nixpkgs-fmt.enable = false;
+          nixfmt-rfc-style.enable = true;
+        };
       };
     }
     // (mapDirs
