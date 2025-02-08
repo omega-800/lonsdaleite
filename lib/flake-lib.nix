@@ -68,7 +68,7 @@ rec {
             {
               inherit name;
               nodes.test =
-                { ... }:
+                _:
                 {
                   imports = [
                     self.nixosModules.lonsdaleite
