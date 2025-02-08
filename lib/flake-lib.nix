@@ -106,13 +106,13 @@ rec {
     system:
     mapDirs
       (
-        n: v: nameValuePair (mkName n) ((pkgs system).callPackage ../packages/${n} { inherit system; })
+        n: _: nameValuePair (mkName n) ((pkgs system).callPackage ../packages/${n} { inherit system; })
       ) ../packages;
 
   mkApps = system: rec {
     test-vm = {
       type = "app";
-      program = "${self.nixosConfigurations.test.config.system.build.vm}/bin/run-nixos-vm";
+      program = "${self.nixosConfigurations."test-${system}".config.system.build.vm}/bin/run-nixos-vm";
     };
     default = test-vm;
   };

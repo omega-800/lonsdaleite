@@ -53,7 +53,7 @@ in
           };
           fullUnit = mkOption {
             type = types.bool;
-            default = cfg.confineAll && cfg.paranoia == 2;
+            default = cfg.confineAll.enable && cfg.paranoia == 2;
             description = ''
               Sets fullUnit = true to all systemd confinements. 
               WARNING: If you do not want your machine to just be a fancy brick, whitelist the services you need or override their serviceConfig.
