@@ -1,3 +1,0 @@
-# https://rules.emergingthreats.net/
-
-{ }

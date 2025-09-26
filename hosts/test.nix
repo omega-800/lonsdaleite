@@ -4,29 +4,30 @@
 
   lonsdaleite = {
     enable = false;
+  /*
     paranoia = 2;
     trustedUser = "alice";
     decapitated = false;
     os = {
       enable = false;
       antivirus.enable = true;
-      audit.enable = true;
-      boot.enable = true;
+      audit.enable = false;
+      boot.enable = false;
       nixos.enable = true;
       # pam.enable = true;
       privilege.enable = true;
       random.enable = true;
       # secureboot.enable = true;
       systemd = {
-        enable = true;
+        enable = false;
         confineAll = {
-          enable = true;
-          fullUnit = true;
+          enable = false;
+          fullUnit = false;
         };
       };
-      tty.enable = true;
+      tty.enable = false;
       update.enable = true;
-      users.enable = true;
+      users.enable = false;
     };
     net = {
       ssh.enable = true;
@@ -39,9 +40,10 @@
     # sw = { apparmor.enable = true; };
     hw = {
       enable = false;
-      # kernel.enable = true;
-      modules.enable = true;
+      kernel.enable = false;
+      modules.enable = false;
     };
+  */
   };
   users.users = {
     alice = {

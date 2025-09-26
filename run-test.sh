@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 # pass any arg to run in headless mode
-extraargs=""
 rmtmprun() { sudo rm ./run.sh; }
 [ -f nixos.qcow2 ] && sudo rm nixos.qcow2
 nix build .#nixosConfigurations.test-x86_64-linux.config.system.build.vm --show-trace || exit 1

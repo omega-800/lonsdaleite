@@ -25,15 +25,14 @@ in
         (mkIf cfg.lock-root { root.hashedPassword = "!"; })
         (mkIf (usr != null) {
           ${usr} = {
-            extraGroups = (
+            extraGroups = 
               filter (group: hasAttr group config.users.groups) [
                 "wheel"
                 "video"
                 "audio"
                 "podman"
                 "adbusers"
-              ]
-            );
+              ];
           };
         })
       ];

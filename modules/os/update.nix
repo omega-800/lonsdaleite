@@ -9,7 +9,7 @@ let
   inherit (lon-lib) mkEnableFrom;
 in
 {
-  options.lonsdaleite.os.update = (mkEnableFrom [ "os" ] "Enables automatic updates");
+  options.lonsdaleite.os.update = mkEnableFrom [ "os" ] "Enables automatic updates";
   config = mkIf cfg.enable {
     system.autoUpgrade = {
       enable = true;
