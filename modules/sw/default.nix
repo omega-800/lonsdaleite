@@ -6,6 +6,7 @@
     ./gpg.nix
     ./isolate.nix
     ./wrappers.nix
+    ./compiler.nix
   ];
   options.lonsdaleite.sw = lon-lib.mkEnableFrom [ ] "hardens or enables secured software";
   # again, NixOS and it's strange defaults... but who am i to complain, i'm writing a very opinionated NixOS module myself at this very moment

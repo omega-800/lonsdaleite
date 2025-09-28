@@ -1,6 +1,20 @@
-{ pkgs, ... }:
 {
-  programs.proxychains = {
+  pkgs,
+  lon-lib,
+  lib,
+  config,
+  ...
+}:
+let
+  cfg = config.lonsdaleite.net.proxychains;
+  inherit (lib) mkIf;
+  inherit (lon-lib)
+    mkEnableFrom
+    ;
+in
+{
+  options.lonsdaleite.net.proxychains = mkEnableFrom [ "net" ] "Enables proxychains";
+  programs.proxychains = mkIf cfg.enable {
     enable = true;
     quietMode = false;
     proxyDNS = true;

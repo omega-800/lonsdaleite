@@ -1,8 +1,20 @@
 # TODO: research https://madaidans-insecurities.github.io/guides/linux-hardening.html\#d-bus
-{ pkgs, lib, ... }:
 {
+  pkgs,
+  lib,
+  lon-lib,
+  ...
+}:
+let
+
+  inherit (lon-lib) mkEnableFrom;
+in
+{
+
+  # TODO: forgot what this does, looks like it belongs to systemd though
+  options.lonsdaleite.hw.dbus = mkEnableFrom [ "hw" ] "Hardens dbus";
   # https://github.com/fort-nix/nix-bitcoin/blob/master/modules/security.nix
-  services.dbus.packages = lib.mkAfter [
+  config.services.dbus.packages = lib.mkAfter [
     # Apply at the end to override the default policy
     (pkgs.writeTextDir "etc/dbus-1/system.d/dbus.conf" ''
       <busconfig>
