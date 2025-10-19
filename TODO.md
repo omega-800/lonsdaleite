@@ -4,6 +4,7 @@
 
 ## the TODO's that are to be done
 
+- https://saylesss88.github.io/nix/gpg-agent.html
 - fs
   - encryption (home & boot & full disk encryption)
   - impermanence

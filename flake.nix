@@ -16,7 +16,7 @@
   # https://github.com/Mic92/dotfiles
   # https://mayflower.de/
   # https://kspp.github.io/
-  # 
+  #
   # honorable mentions
   # https://spectrum-os.org/doc/installation/getting-spectrum.html
   # https://github.com/NixOS/nixpkgs/issues/7220
@@ -29,17 +29,12 @@
 
   inputs = {
     # use stable channel by default
-    # TODO: switch back to stable after testing apparmor-d
-    # nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    # TODO: does flake-parts enable lazy evaluation of flake inputs?
-    # i don't like trashing projects full with deps
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     impermanence.url = "github:nix-community/impermanence";
     apparmor-d = {
       url = "github:omega-800/apparmor.d";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # TODO: remove these in "prod"
     nix-github-actions = {
       url = "github:nix-community/nix-github-actions";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -51,12 +46,9 @@
   };
 
   outputs =
-    { self, nixpkgs, ... }:
+    { self, ... }:
     let
-      inherit
-        (import ./lib/flake-lib.nix {
-          inherit self;
-        })
+      inherit (import ./lib/flake-lib.nix { inherit self; })
         mkModules
         mkHosts
         mkChecks

@@ -22,15 +22,21 @@ in
 rec {
   systems = [
     "x86_64-linux"
-    # TODO: 
+    # TODO:
     # "aarch64-linux"
     # "i686-linux"
   ];
 
-  forEachSystem = f: genAttrs systems f;
-  forEachSystem' = f: listToAttrs (concatMap f systems);
+  forEachSystem = f: genAttrs systems (s: f (importPkgs s));
+  forEachSystem' = f: listToAttrs (concatMap (s: f (importPkgs s)) systems);
 
-  pkgs = system: nixpkgs.legacyPackages.${system};
+  importPkgs =
+    system:
+    import nixpkgs {
+      inherit system;
+      config = { };
+      overlays = [ ];
+    };
 
   filterDirFn =
     dir: n: v:
@@ -44,12 +50,12 @@ rec {
 
   mkName = filename: if hasSuffix ".nix" filename then removeSuffix ".nix" filename else filename;
 
-  mkFormatter = system: (pkgs system).nixfmt-rfc-style;
+  mkFormatter = pkgs: pkgs.nixfmt-rfc-style;
 
   mkChecks =
-    system:
+    pkgs:
     {
-      pre-commit-check = self.inputs.pre-commit-hooks.lib.${system}.run {
+      pre-commit-check = self.inputs.pre-commit-hooks.lib.${pkgs.system}.run {
         src = ./.;
         hooks = {
           nixpkgs-fmt.enable = false;
@@ -57,81 +63,87 @@ rec {
         };
       };
     }
-    // (mapDirs
-      (
-        n: v:
-        let
-          name = mkName n;
-        in
-        nameValuePair name (
-          (pkgs system).nixosTest (
-            {
-              inherit name;
-              nodes.test =
-                _:
-                {
-                  imports = [
-                    self.nixosModules.lonsdaleite
-                    ../hosts/test.nix
-                  ];
-                };
-            }
-            // (import ../checks/${n})
-          )
+    // (mapDirs (
+      n: _:
+      let
+        name = mkName n;
+      in
+      nameValuePair name (
+        pkgs.nixosTest (
+          {
+            inherit name;
+            nodes.test = _: {
+              imports = [
+                self.nixosModules.lonsdaleite
+                ../hosts/test.nix
+              ];
+            };
+          }
+          // (import ../checks/${n})
         )
-      ) ../checks);
+      )
+    ) ../checks);
 
   mkHosts =
-    system:
-    mapDirs'
-      (
-        v:
-        let
-          n = v.name;
-          name = mkName n;
-        in
-        {
-          name = "${name}-${system}";
-          value = nixosSystem {
-            inherit system;
-            modules = [
-              self.nixosModules.lonsdaleite
-              ../hosts/${n}
-            ];
-          };
-        }
-      ) ../hosts;
+    pkgs:
+    mapDirs' (
+      v:
+      let
+        n = v.name;
+        name = mkName n;
+      in
+      {
+        name = "${name}-${pkgs.system}";
+        value = nixosSystem {
+          inherit (pkgs) system;
+          modules = [
+            self.nixosModules.lonsdaleite
+            ../hosts/${n}
+          ];
+        };
+      }
+    ) ../hosts;
 
   mkPkgs =
-    system:
-    mapDirs
-      (
-        n: _: nameValuePair (mkName n) ((pkgs system).callPackage ../packages/${n} { inherit system; })
-      ) ../packages;
+    pkgs:
+    mapDirs (
+      n: _: nameValuePair (mkName n) (pkgs.callPackage ../packages/${n} { inherit (pkgs) system; })
+    ) ../packages;
 
-  mkApps = system: rec {
-    test-vm = {
-      type = "app";
-      program = "${self.nixosConfigurations."test-${system}".config.system.build.vm}/bin/run-nixos-vm";
-    };
-    default = test-vm;
-  };
-
-  mkModules = rec {
-    lonsdaleite =
-      { config, lib, ... }:
-      {
-        imports = [
-          ../modules
-          self.inputs.impermanence.nixosModules.impermanence
-        ];
-        _module.args = {
-          inherit self;
-          lon-lib = import ./lon-lib.nix { inherit lib config; };
-        };
+  mkApps =
+    pkgs:
+    let
+      test-vm = {
+        type = "app";
+        program = "${pkgs.writeShellScript "run-test-vm" ''
+          QEMU_KERNEL_PARAMS=console=ttyS0 ${
+            self.nixosConfigurations."test-${pkgs.system}".config.system.build.vm
+          }/bin/run-nixos-vm -nographic 
+        ''}";
       };
-    default = lonsdaleite; # convention
-  };
+    in
+    {
+      default = test-vm;
+    };
+
+  mkModules =
+    let
+      lonsdaleite =
+        { config, lib, ... }:
+        {
+          imports = [
+            ../modules
+            self.inputs.impermanence.nixosModules.impermanence
+          ];
+          _module.args = {
+            inherit self;
+            lon-lib = import ./lon-lib.nix { inherit lib config; };
+          };
+        };
+    in
+    {
+      default = lonsdaleite;
+    };
 
   mkGithubActions = self.inputs.nix-github-actions.lib.mkGithubMatrix {
     checks = {
@@ -140,15 +152,19 @@ rec {
     };
   };
 
-  mkDevShell = system: rec {
-    lonsdaleite = (pkgs system).mkShell {
-      inherit (self.checks.${system}.pre-commit-check) shellHook;
-      buildInputs = self.checks.${system}.pre-commit-check.enabledPackages;
-      packages = with (pkgs system); [
-        nixd
-        nixfmt-rfc-style
-      ];
+  mkDevShell =
+    pkgs:
+    let
+      lonsdaleite = pkgs.mkShell {
+        inherit (self.checks.${pkgs.system}.pre-commit-check) shellHook;
+        buildInputs = self.checks.${pkgs.system}.pre-commit-check.enabledPackages;
+        packages = with pkgs; [
+          nixd
+          nixfmt-rfc-style
+        ];
+      };
+    in
+    {
+      default = lonsdaleite;
     };
-    default = lonsdaleite;
-  };
 }
