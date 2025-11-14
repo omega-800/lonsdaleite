@@ -29,6 +29,7 @@ in
     ])
     // {
       enable = mkEnableDef config.lonsdaleite.decapitated "Enables usb support";
+      disable = mkEnableDef (!config.lonsdaleite.fs.usb) "Disables usb support";
       usbguard =
         (mkEnableFrom [
           "fs"
@@ -53,15 +54,7 @@ in
     };
 
   config = mkMerge [
-    {
-      boot.blacklistedKernelModules = [
-        # https://git.launchpad.net/ubuntu/+source/kmod/tree/debian/modprobe.d/blacklist.conf?h=ubuntu/disco
-        # these drivers are very simple, the HID drivers are usually preferred
-        "usbkbd"
-        "usbmouse"
-      ];
-    }
-    (mkIf (!cfg.enable) {
+    (mkIf (cfg.disable) {
       # You can also disable USB from system BIOS configuration option. Make sure BIOS is password protected. This is recommended option so that nobody can boot it from USB.
       boot = {
         blacklistedKernelModules = [
@@ -81,6 +74,12 @@ in
     })
     (mkIf cfg.enable {
       boot.kernel.sysctl."kernel.deny_new_usb" = if cfg.paranoia >= 1 then "1" else "0";
+      boot.blacklistedKernelModules = [
+        # https://git.launchpad.net/ubuntu/+source/kmod/tree/debian/modprobe.d/blacklist.conf?h=ubuntu/disco
+        # these drivers are very simple, the HID drivers are usually preferred
+        "usbkbd"
+        "usbmouse"
+      ];
     })
     (mkIf cfg.usbguard.enable {
       services.usbguard = {

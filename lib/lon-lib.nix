@@ -33,7 +33,7 @@ rec {
   mkLowerForce = val: lib.mkOverride 200 val;
   mkLowForce = val: lib.mkOverride 100 val;
 
-  userByName = name: findFirst (u: u.name == name) null (mapAttrsToList (n: v: v) config.users.users);
+  userByName = name: findFirst (u: u.name == name) null (builtins.attrValues config.users.users);
 
   mkDisableOption = description: mkEnableDef true description;
   mkEnableDef =
@@ -85,13 +85,13 @@ rec {
     dir:
     mapAttrsToList
       (
-        n: v:
+        n: _:
         let
           split = splitString "." n;
         in
         concatStringsSep "." (take ((length split) - 1) split)
       )
-      (filterAttrs (n: v: v == "regular") (builtins.readDir dir));
+      (filterAttrs (_: v: v == "regular") (builtins.readDir dir));
 
   mkEtcPersist =
     file: content:
@@ -119,7 +119,7 @@ rec {
   # yeah nice try, yields infinite recursion
   mkImport =
     dir:
-    map (n: v: n) (
+    map (n: _: n) (
       filterAttrs
         (
           n: v:
