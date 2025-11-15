@@ -1,9 +1,9 @@
-{ self
-, config
-, lib
-, lon-lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  lon-lib,
+  pkgs,
+  ...
 }:
 let
   cfg = config.lonsdaleite.sw.apparmor;
@@ -19,20 +19,23 @@ in
   # TODO: implement apparmor in nixos https://github.com/omega-800/apparmor-d
   options.lonsdaleite.sw.apparmor =
     (mkEnableFrom [ "sw" ] "Enables apparmor")
-    // (mkParanoiaFrom [ "sw" ] [
-      ""
-      ""
-      ""
-    ])
+    // (mkParanoiaFrom
+      [ "sw" ]
+      [
+        ""
+        ""
+        ""
+      ]
+    )
     // { };
 
   config = mkIf cfg.enable {
     environment = mkPersistDirs [
       "/etc/apparmor"
     ]
-      #   // (mkEtcPersist "apparmor/parser.conf" ''
-      #   Optimize=compress-fast
-      # '')
+    #   // (mkEtcPersist "apparmor/parser.conf" ''
+    #   Optimize=compress-fast
+    # '')
     ;
     security = {
       apparmor = {

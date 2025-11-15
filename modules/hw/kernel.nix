@@ -1,9 +1,9 @@
-{ self
-, config
-, lib
-, lon-lib
-, pkgs
-, ...
+{
+  config,
+  lib,
+  lon-lib,
+  pkgs,
+  ...
 }:
 let
   # TODO: research https://www.kicksecure.com/wiki/Hardened-kernel
@@ -22,20 +22,24 @@ let
   inherit (lib) mkIf mkEnableOption;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom;
   version = "6.11.0"; # FIXME: get correct version
-  hardenedConfig = import "${self.inputs.nixpkgs}/pkgs/os-specific/linux/kernel/hardened/config.nix" {
-    inherit lib version;
-    inherit (pkgs) stdenv;
-  };
+  #TODO:
+  #hardenedConfig = import "${self.inputs.nixpkgs}/pkgs/os-specific/linux/kernel/hardened/config.nix" {
+  #  inherit lib version;
+  #  inherit (pkgs) stdenv;
+  #};
   lonsdaleiteConfig = import ./kernelcfg.nix { inherit pkgs version; };
 in
 {
   options.lonsdaleite.hw.kernel =
     (mkEnableFrom [ "hw" ] "Hardens kernel")
-    // (mkParanoiaFrom [ "hw" ] [
-      ""
-      ""
-      ""
-    ])
+    // (mkParanoiaFrom
+      [ "hw" ]
+      [
+        ""
+        ""
+        ""
+      ]
+    )
     // {
       openpax = mkEnableOption "Uses the openpax kernel";
     };
@@ -57,7 +61,7 @@ in
         {
           name = "lonsdaleite";
           patch = null;
-          extraStructuredConfig = hardenedConfig // lonsdaleiteConfig;
+          extraStructuredConfig = /*hardenedConfig // */ lonsdaleiteConfig;
           # extraConfig = "\n" + concatStringsSep "\n" (attrNames (filterAttrs
           #   (n: v: elem archMap.${removeSuffix "-linux" pkgs.system} v)
           #   kernelConfigs));
