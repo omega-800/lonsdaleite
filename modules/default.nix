@@ -21,14 +21,14 @@ let
 in
 {
   imports = [
-    ./fs
-    ./hw
     ./net
-    ./os
-    ./sw
-    # TODO: disable some of these if not needed
-    # also remove dupes
-    "${modulesPath}/profiles/hardened.nix"
+    # ./fs
+    # ./hw
+    # ./os
+    # ./sw
+    # # TODO: disable some of these if not needed
+    # # also remove dupes
+    # "${modulesPath}/profiles/hardened.nix"
   ];
 
   options.lonsdaleite =
