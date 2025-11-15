@@ -29,7 +29,7 @@ in
     ])
     // {
       enable = mkEnableDef config.lonsdaleite.decapitated "Enables usb support";
-      disable = mkEnableDef (!config.lonsdaleite.fs.usb) "Disables usb support";
+      disable = mkEnableDef (!config.lonsdaleite.fs.usb.enable) "Disables usb support";
       usbguard =
         (mkEnableFrom [
           "fs"

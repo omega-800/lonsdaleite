@@ -142,6 +142,7 @@ rec {
         };
     in
     {
+      inherit lonsdaleite;
       default = lonsdaleite;
     };
 
