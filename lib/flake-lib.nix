@@ -123,6 +123,7 @@ rec {
       };
     in
     {
+      inherit test-vm;
       default = test-vm;
     };
 
@@ -166,6 +167,7 @@ rec {
       };
     in
     {
+      inherit lonsdaleite;
       default = lonsdaleite;
     };
 }

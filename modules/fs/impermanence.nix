@@ -1,8 +1,9 @@
-{ inputs
-, config
-, lib
-, lon-lib
-, ...
+{
+  inputs,
+  config,
+  lib,
+  lon-lib,
+  ...
 }:
 let
   cfg = config.lonsdaleite.fs.impermanence;
@@ -13,20 +14,21 @@ let
     mkEnableOption
     ;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkEnableDef;
-  #FIXME:
-  # isFsEnabled =
-  #   fsType:
-  #   (builtins.elem fsType config.boot.initrd.supportedFilesystems)
-  #   || config.fileSystems."/".fsType == fsType;
+  isFsEnabled =
+    fsType:
+    let
+      sf = config.boot.initrd.supportedFilesystems;
+    in
+    (sf ? ${fsType} && sf.${fsType}) || config.fileSystems."/".fsType == fsType;
 in
 {
   options.lonsdaleite.fs.impermanence =
     (mkEnableFrom [ "fs" ] "makes your / go whoosh every time you reboot")
     // (mkParanoiaFrom [ "fs" ] [ ])
     // {
-      #btrfs-integration = mkEnableDef (isFsEnabled "btrfs") "enables btrfs support";
-      #zfs-integration = mkEnableDef (isFsEnabled "zfs") "enables zfs support";
-      #ext4-integration = mkEnableDef (isFsEnabled "ext4") "enables lvm support";
+      btrfs-integration = mkEnableDef (isFsEnabled "btrfs") "enables btrfs support";
+      zfs-integration = mkEnableDef (isFsEnabled "zfs") "enables zfs support";
+      ext4-integration = mkEnableDef (isFsEnabled "ext4") "enables lvm support";
     };
 
   #TODO: implement
