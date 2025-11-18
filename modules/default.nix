@@ -28,7 +28,7 @@ in
     ./sw
     # TODO: disable some of these if not needed
     # also remove dupes
-    "${modulesPath}/profiles/hardened.nix"
+    # "${modulesPath}/profiles/hardened.nix"
   ];
 
   options.lonsdaleite =
