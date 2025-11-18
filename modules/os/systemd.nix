@@ -31,7 +31,8 @@ in
   # man systemd.exec
   # TODO: AppArmorProfile
 
-  imports = [ ./systemd ];
+  # FIXME: test first
+  # imports = [ ./systemd ];
 
   options = {
     lonsdaleite.os.systemd =
