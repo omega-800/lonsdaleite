@@ -29,7 +29,6 @@ in
     )
     // { };
 
-  /*
   config = mkIf cfg.enable {
     environment = mkPersistDirs [
       "/etc/apparmor"
@@ -49,5 +48,4 @@ in
       # };
     };
   };
-  */
 }
