@@ -46,7 +46,7 @@ in
         confineAll = {
           enable = mkOption {
             type = types.bool;
-            default = cfg.paranoia > 0;
+            default = config.lonsdaleite.os.systemd.enable && cfg.paranoia > 0;
             description = ''
               Confines all systemd services. 
               WARNING: Will render your system unusable if the systemd services you need aren't whitelisted.
@@ -154,37 +154,38 @@ in
           };
         };
       };
+    # FIXME: only if confineAll
     # override defaults for all systemd services
-    systemd.services = mkOption {
-      type = types.attrsOf (
-        types.submodule (
-          { name, ... }:
-          let
-            # https://developer.hashicorp.com/vault/tutorials/operations/production-hardening#extended-recommendations
-            serviceConfig = {
-              "ProtectSystem" = mkHighDefault "full";
-              "PrivateTmp" = mkHighDefault true;
-              "CapabilityBoundingSet" = mkHighDefault [
-                "CAP_SYSLOG"
-                "CAP_IPC_LOCK"
-              ];
-              "AmbientCapabilities" = mkHighDefault "CAP_IPC_LOCK";
-              "ProtectHome" = mkHighDefault "read-only";
-              "PrivateDevices" = mkHighDefault true;
-              "NoNewPrivileges" = mkHighDefault true;
-            };
-          in
-          {
-            config = {
-              inherit serviceConfig;
-              confinement = mkIf (!(elem name cfg.confineAll.whitelist)) {
-                inherit (cfg.confineAll) enable fullUnit;
-              };
-            };
-          }
-        )
-      );
-    };
+    # systemd.services = mkOption {
+    #   type = types.attrsOf (
+    #     types.submodule (
+    #       { name, ... }:
+    #       let
+    #         # https://developer.hashicorp.com/vault/tutorials/operations/production-hardening#extended-recommendations
+    #         serviceConfig = {
+    #           "ProtectSystem" = mkHighDefault "full";
+    #           "PrivateTmp" = mkHighDefault true;
+    #           "CapabilityBoundingSet" = mkHighDefault [
+    #             "CAP_SYSLOG"
+    #             "CAP_IPC_LOCK"
+    #           ];
+    #           "AmbientCapabilities" = mkHighDefault "CAP_IPC_LOCK";
+    #           "ProtectHome" = mkHighDefault "read-only";
+    #           "PrivateDevices" = mkHighDefault true;
+    #           "NoNewPrivileges" = mkHighDefault true;
+    #         };
+    #       in
+    #       {
+    #         config = {
+    #           inherit serviceConfig;
+    #           confinement = mkIf (!(elem name cfg.confineAll.whitelist)) {
+    #             inherit (cfg.confineAll) enable fullUnit;
+    #           };
+    #         };
+    #       }
+    #     )
+    #   );
+    # };
   };
 
   config = mkIf cfg.enable {
