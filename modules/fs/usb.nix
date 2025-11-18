@@ -54,7 +54,7 @@ in
     };
 
   config = mkMerge [
-    (mkIf (cfg.disable) {
+    (mkIf cfg.disable {
       # You can also disable USB from system BIOS configuration option. Make sure BIOS is password protected. This is recommended option so that nobody can boot it from USB.
       boot = {
         blacklistedKernelModules = [
