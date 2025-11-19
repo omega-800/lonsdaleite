@@ -41,6 +41,7 @@ in
             (pkgs.writeScriptBin "sudo" ''exec doas "$@"'')
             (pkgs.writeScriptBin "sudoedit" ''exec doas ${lib.getExe' pkgs.nano "rnano"} "$@"'')
             (pkgs.writeScriptBin "doasedit" ''exec doas ${lib.getExe' pkgs.nano "rnano"} "$@"'')
+            pkgs.doas-sudo-shim
           ]
         else
           [ ];
