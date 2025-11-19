@@ -144,7 +144,6 @@ in
           ExecStart = prefix + "${pkgs.clamav}/bin/clamonacc -F --fdpass --allmatch";
           PrivateTmp = true;
           PrivateDevices = true;
-          PrivateNetwork = true;
         };
       };
 
