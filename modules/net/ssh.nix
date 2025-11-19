@@ -65,7 +65,7 @@ in
           ForwardX11Trusted no
           ForwardX11Timeout 1s
           ForwardAgent no
-          GSSAPIAuthentication no
+          # GSSAPIAuthentication no
           HostbasedAuthentication no
           StrictHostKeyChecking ${if cfg.paranoia == 2 then "yes" else "ask"}
           UpdateHostKeys ${if cfg.paranoia == 2 then "no" else "ask"}
@@ -89,8 +89,8 @@ in
       (mkIf (cfg.paranoia >= 1) {
         extraConfig = ''
           Tunnel no
-          SendEnv
-          SetEnv
+          # SendEnv
+          # SetEnv
           PasswordAuthentication no
           PermitLocalCommand no
           RequiredRSASize 3072
