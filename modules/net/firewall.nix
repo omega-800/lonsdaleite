@@ -28,7 +28,7 @@ in
     networking.firewall = {
       enable = true;
       allowPing = cfg.paranoia != 2;
-      pingLimit = "--limit 1/minute --limit-burst ${toString 5 - cfg.paranoia}";
+      pingLimit = "--limit 1/minute --limit-burst ${toString (5 - cfg.paranoia)}";
       checkReversePath = if cfg.paranoia > 1 then "strict" else "loose";
       rejectPackets = false;
       filterForward = false;

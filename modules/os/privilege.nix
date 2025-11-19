@@ -15,7 +15,7 @@ in
     (mkEnableFrom [ "os" ] "Enables privileged access for trusted user")
     // {
       use-sudo = mkEnableOption "Uses sudo instead of doas";
-      disable = mkEnableDef (!cfg.enable) "Disables sudo/doas completely";
+      disable = mkEnableOption "Disables sudo/doas completely";
     };
 
   config = mkMerge [
