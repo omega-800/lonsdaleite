@@ -128,11 +128,11 @@ in
             PermitTunnel no
             ExposeAuthInfo no
             FingerprintHash sha256
-            GSSAPIAuthentication no
-            KerberosAuthentication ${if config.lonsdaleite.net.kerberos.enable then "yes" else "no"}
+            # GSSAPIAuthentication no
+            # KerberosAuthentication ${if config.lonsdaleite.net.kerberos.enable then "yes" else "no"}
             # KerberosGetAFSToken no
-            KerberosOrLocalPasswd no
-            KerberosTicketCleanup yes
+            # KerberosOrLocalPasswd no
+            # KerberosTicketCleanup yes
             LoginGraceTime ${toString (120 - (cfg.paranoia * 30))}
             MaxStartups ${toString (10 - (cfg.paranoia * 3))}:${toString (30 + (cfg.paranoia * 20))}:${
               toString (100 - (cfg.paranoia * 30))
