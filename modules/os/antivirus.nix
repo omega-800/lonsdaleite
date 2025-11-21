@@ -16,19 +16,22 @@ let
     concatStringsSep
     ;
   inherit (lon-lib) mkEnableFrom mkParanoiaFrom mkPersistDirs;
-  notifyScript = pkgs.writeShellScript "malware_detected" ./malware_detected.sh;
+  notifyScript = pkgs.writeShellScriptBin "malware_detected" ./malware_detected.sh;
   sus-user-dirs = [
     "Downloads"
+    "dl"
     ".mozilla"
+    ".librewolf"
     ".vscode"
+    ".vscode-oss"
   ];
-  all-normal-users = filterAttrs (n: c: c.isNormalUser) config.users.users;
+  all-normal-users = filterAttrs (_: c: c.isNormalUser) config.users.users;
   all-sus-dirs = builtins.concatMap
     (
-      dir: mapAttrsToList (u: c: c.home + "/" + dir) all-normal-users
+      dir: mapAttrsToList (_: c: c.home + "/" + dir) all-normal-users
     )
     sus-user-dirs;
-  all-user-folders = mapAttrsToList (u: c: c.home) all-normal-users;
+  all-user-folders = mapAttrsToList (_: c: c.home) all-normal-users;
   #TODO: research
   all-system-folders = [
     "/boot"
